@@ -243,6 +243,12 @@ strong {
   border-radius: var(--radius-xs);
 }
 
+/* Evita que una referencia legal se parta al final de la línea:
+   "Ley N." en un renglón y "° 29571" en el siguiente se lee mal. */
+.nowrap {
+  white-space: nowrap;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;

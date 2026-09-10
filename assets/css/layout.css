@@ -738,6 +738,42 @@ a.topbar__value:hover {
   color: var(--brand-red);
 }
 
+.site-footer__legal {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+/* El Libro de Reclamaciones tiene que ser visible y fácil de encontrar:
+   el Art. 3.5 del D.S. 011-2011-PCM lo exige. Por eso lleva marco propio
+   en vez de ser un enlace más del pie. */
+.footer-lr {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  min-height: 40px;
+  padding: 0 var(--space-sm);
+  color: var(--white);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  transition: background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+.footer-lr:hover {
+  color: var(--white);
+  background-color: var(--brand-red);
+  border-color: var(--brand-red);
+}
+
+.footer-lr svg {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+
 /* --------------------------------------------------------------------------
    6. Responsive
    -------------------------------------------------------------------------- */

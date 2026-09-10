@@ -16,6 +16,7 @@ Se abre `index.html` en el navegador y funciona.
 ├── servicios.html      Seis servicios en panel maestro-detalle
 ├── contacto.html       Formulario, datos y mapa
 ├── privacidad.html     Política de privacidad (Ley 29733)
+├── libro-de-reclamaciones.html   Libro de Reclamaciones (Ley 29571)
 ├── 404.html
 ├── robots.txt · sitemap.xml
 │
@@ -30,6 +31,16 @@ Se abre `index.html` en el navegador y funciona.
 │   │   ├── carousel.js     Carrusel del hero
 │   │   └── forms.js        Validación y envío
 │   └── imagen/             Ver assets/imagen/LEEME-IMAGENES.md
+│
+├── api/                Backend del Libro de Reclamaciones (PHP)
+│   ├── reclamo.php         Endpoint: valida, numera, genera PDF y envía
+│   ├── token.php           Emite el token de sesión del formulario
+│   ├── config.php          Configuración (sin credenciales)
+│   ├── src/                Seguridad, Validador, Correlativo, HojaPdf, Notificador
+│   ├── lib/                FPDF y PHPMailer
+│   └── storage/            Hojas archivadas, contador y logs (no se sirve por HTTP)
+│
+├── preview.py          Servidor local con URLs limpias
 │
 └── design-system/
     └── quantuk-peru/MASTER.md   Fuente de verdad del diseño
@@ -63,6 +74,51 @@ vista previa de enlaces todavía no interpretan WebP.
 
 ---
 
+## Libro de Reclamaciones
+
+Formulario en `/libro-de-reclamaciones` con backend PHP. Al enviarlo genera
+una Hoja de Reclamación en PDF de **una sola página**, la archiva en el
+servidor y la remite al correo del consumidor con copia oculta a la bandeja
+interna.
+
+**Requiere PHP 8.0 o superior**, disponible en cualquier hosting cPanel. El
+resto del sitio sigue siendo estático: si el backend falla, las demás páginas
+no se ven afectadas.
+
+### Al desplegar
+
+1. Copiar `api/config.secret.example.php` a `api/config.secret.php`
+2. Poner ahí la contraseña del buzón `reclamaciones@quantukperu.com`
+3. Dar permiso de escritura a `api/storage/` (755 suele bastar)
+
+`config.secret.php` está excluido del repositorio a propósito: una contraseña
+que entra al historial de Git ya no se puede borrar de ahí.
+
+### Base legal implementada
+
+- Contenido mínimo de la Hoja según el art. 5 del <span>D.S. 011-2011-PCM</span>
+- Numeración correlativa protegida contra registros simultáneos
+- Distinción entre reclamo y queja con sus definiciones legales
+- Plazo de respuesta de **15 días hábiles improrrogables** (art. 24 de la
+  Ley 29571, modificado por la Ley 31435). Ojo: el reglamento de 2011 decía
+  30 días calendario y quedó desactualizado; muchos formatos que circulan
+  todavía arrastran esa cifra
+- Conservación de las hojas por dos años (art. 12)
+- La casilla de conformidad reemplaza a la firma, como admite el art. 5 para
+  el libro virtual
+- Aviso del Libro visible en el pie de todas las páginas (art. 3.5)
+
+### Defensas del formulario
+
+Límite por IP con ventana deslizante (3 por hora, 8 por día) más un freno
+global, token de un solo uso ligado a la sesión, tiempo mínimo de llenado,
+campo trampa para robots, verificación de origen, tope de tamaño de la
+petición, validación estricta en el servidor y bloqueo de inyección de
+cabeceras en el correo. Los mensajes de error hacia el navegador son
+genéricos; el detalle queda en `api/storage/log/`.
+
+---
+
 ## Pendiente antes de publicar
 
 - [ ] **Inscribir el banco de datos personales** en el Registro Nacional de la
@@ -72,6 +128,8 @@ vista previa de enlaces todavía no interpretan WebP.
 - [ ] Reemplazar las cifras del inicio por las reales (marcadas con `TODO`)
 - [ ] Reemplazar `hero/capacitacion-corporativa-empresas.webp`: tiene texto
       ilegible generado por IA en las pantallas del fondo
+- [ ] Cargar la contraseña SMTP en `api/config.secret.php` y enviar un
+      reclamo de prueba para confirmar que el correo llega
 
 ---
 

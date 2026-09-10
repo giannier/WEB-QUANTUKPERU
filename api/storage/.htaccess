@@ -1,0 +1,5 @@
+# Los PDF archivados, el contador, los logs y el control de IPs no se sirven
+# por HTTP bajo ninguna circunstancia. Contienen datos personales de los
+# reclamantes.
+Require all denied
+Options -Indexes

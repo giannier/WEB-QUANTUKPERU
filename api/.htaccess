@@ -1,0 +1,19 @@
+# Solo reclamo.php y token.php son accesibles desde fuera.
+# El resto (configuración, clases, librerías, almacenamiento) queda cerrado.
+
+<FilesMatch "\.(php)$">
+  Require all denied
+</FilesMatch>
+
+<FilesMatch "^(reclamo|token)\.php$">
+  Require all granted
+</FilesMatch>
+
+# Nada de listar directorios
+Options -Indexes
+
+# El endpoint no debe cachearse en ningún punto intermedio
+<IfModule mod_headers.c>
+  Header always set Cache-Control "no-store, no-cache, must-revalidate"
+  Header always set X-Content-Type-Options "nosniff"
+</IfModule>

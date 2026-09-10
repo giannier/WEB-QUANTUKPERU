@@ -1,0 +1,3 @@
+# Clases internas: solo se cargan desde reclamo.php
+Require all denied
+Options -Indexes

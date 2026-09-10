@@ -1,0 +1,285 @@
+/* ==========================================================================
+   Quantuk Perú — reclamaciones.css
+   Estilos propios del Libro de Reclamaciones. Se carga solo en esa página.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Aviso del Libro de Reclamaciones
+   El Art. 3.5 del D.S. 011-2011-PCM exige que sea visible y fácilmente
+   accesible: por eso va arriba de todo y con el color de marca.
+   -------------------------------------------------------------------------- */
+.aviso-lr {
+  padding: var(--space-md) var(--space-lg);
+  margin-bottom: var(--space-xl);
+  background-color: var(--brand-red-soft);
+  border-left: 4px solid var(--brand-red);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.aviso-lr p {
+  margin: 0;
+  font-size: var(--text-base);
+  color: var(--ink-800);
+  max-width: none;
+}
+
+/* --------------------------------------------------------------------------
+   Reclamo vs Queja: la distinción legal, explicada antes de elegir
+   -------------------------------------------------------------------------- */
+.lr-tipos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.lr-tipo {
+  padding-left: var(--space-md);
+  border-left: 3px solid var(--line-strong);
+}
+
+.lr-tipo h2 {
+  font-size: var(--text-lg);
+  margin-bottom: var(--space-2xs);
+}
+
+.lr-tipo p {
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.lr-plazo {
+  padding: var(--space-md);
+  margin-bottom: var(--space-2xl);
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  background-color: var(--surface);
+  border-radius: var(--radius-sm);
+  max-width: none;
+}
+
+@media (max-width: 640px) {
+  .lr-tipos {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Formulario
+   -------------------------------------------------------------------------- */
+.lr-form {
+  gap: 0;
+}
+
+.lr-fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0 0 var(--space-2xl);
+  display: grid;
+  gap: var(--space-md);
+}
+
+.lr-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  width: 100%;
+  padding: 0 0 var(--space-sm);
+  margin-bottom: var(--space-2xs);
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--ink-900);
+  border-bottom: 1px solid var(--border);
+}
+
+.lr-legend span {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  font-size: var(--text-sm);
+  color: var(--white);
+  background-color: var(--brand-red);
+  border-radius: 50%;
+}
+
+/* --- Reclamo / Queja: tarjetas seleccionables --- */
+.lr-opciones {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.lr-opcion {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  cursor: pointer;
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  transition: border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+.lr-opcion:hover {
+  border-color: var(--brand-red);
+}
+
+.lr-opcion input {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  accent-color: var(--brand-red);
+}
+
+.lr-opcion__cuerpo {
+  display: grid;
+  gap: 2px;
+}
+
+.lr-opcion strong {
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  color: var(--ink-900);
+}
+
+.lr-opcion em {
+  font-size: var(--text-sm);
+  font-style: normal;
+  color: var(--text-muted);
+}
+
+/* :has permite marcar la tarjeta entera sin JavaScript. Los navegadores que
+   no lo soporten simplemente no la resaltan: el radio sigue funcionando. */
+.lr-opcion:has(input:checked) {
+  border-color: var(--brand-red);
+  background-color: var(--brand-red-soft);
+}
+
+.lr-opcion:has(input:focus-visible) {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+
+@media (max-width: 560px) {
+  .lr-opciones {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Bloque del representante --- */
+.lr-tutor {
+  display: grid;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background-color: var(--surface);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--brand-red);
+}
+
+.lr-tutor[hidden] {
+  display: none;
+}
+
+.lr-tutor__nota {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.field__control--corto {
+  min-height: 92px;
+}
+
+/* --- Errores de grupo (radios y casillas) --- */
+.field__error[data-error-for] {
+  display: none;
+}
+
+.field__error[data-error-for].is-visible {
+  display: flex;
+}
+
+.lr-nota {
+  margin-top: var(--space-sm);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   Trampa para robots
+   Fuera de la pantalla en lugar de display:none: algunos robots ignoran los
+   campos ocultos con display, pero rellenan los que están posicionados.
+   aria-hidden y tabindex -1 la mantienen invisible para lectores y teclado.
+   -------------------------------------------------------------------------- */
+.lr-trampa {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* --------------------------------------------------------------------------
+   Confirmación
+   -------------------------------------------------------------------------- */
+.lr-exito {
+  padding: var(--space-2xl) var(--space-lg);
+  text-align: center;
+  background-color: var(--surface);
+  border-radius: var(--radius-lg);
+}
+
+.lr-exito[hidden] {
+  display: none;
+}
+
+.lr-exito__icono {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto var(--space-md);
+  color: var(--white);
+  background-color: var(--success);
+  border-radius: 50%;
+}
+
+.lr-exito__icono svg {
+  width: 32px;
+  height: 32px;
+}
+
+.lr-exito h2 {
+  margin-bottom: var(--space-2xs);
+}
+
+.lr-exito p {
+  margin-inline: auto;
+  color: var(--text-muted);
+}
+
+.lr-exito__numero {
+  margin-block: var(--space-sm) var(--space-md);
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  color: var(--ink-900);
+}
+
+.lr-exito__numero strong {
+  color: var(--brand-red);
+  font-variant-numeric: tabular-nums;
+}
+
+.lr-exito .btn {
+  margin-top: var(--space-lg);
+}

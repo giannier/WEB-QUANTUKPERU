@@ -32,3 +32,18 @@ node_modules/
 # Bytecode que genera el intérprete al importar preview.py
 __pycache__/
 *.py[cod]
+
+# --- Libro de Reclamaciones -------------------------------------------------
+# Credenciales del correo: jamás deben entrar al historial de Git
+api/config.secret.php
+
+# Hojas de Reclamación archivadas: contienen datos personales de los
+# reclamantes (nombre, DNI, domicilio, teléfono). Se conservan en el
+# servidor durante dos años, no en el repositorio.
+api/storage/hojas/**
+!api/storage/hojas/.gitignore
+api/storage/log/**
+!api/storage/log/.gitignore
+api/storage/ratelimit/**
+!api/storage/ratelimit/.gitignore
+api/storage/correlativo.dat
