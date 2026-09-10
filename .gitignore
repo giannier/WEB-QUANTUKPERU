@@ -1,0 +1,29 @@
+# --- Configuración local de herramientas -----------------------------------
+# Contiene rutas absolutas y permisos de esta máquina: no sirve en otra
+# y expone la estructura del equipo.
+.claude/
+
+# Índice de skills generado localmente
+.atl/
+
+# --- Archivos temporales del proceso de build ------------------------------
+# Páginas y scripts auxiliares que se crean y borran al generar o auditar
+__*.html
+__*.js
+
+# --- Sistema operativo ------------------------------------------------------
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# --- Editores ---------------------------------------------------------------
+*.code-workspace
+*.swp
+*~
+
+# --- Varios -----------------------------------------------------------------
+*.log
+*.tmp
+node_modules/

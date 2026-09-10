@@ -1,0 +1,323 @@
+/* ==========================================================================
+   Quantuk Perú — pages.css
+   Blocks that belong to a single page. Everything shared lives in
+   layout.css or components.css.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Editorial media block (Nosotros / Inicio)
+   Asymmetric image composition — the Swiss alternative to a photo card.
+   -------------------------------------------------------------------------- */
+/* Contenedor posicionado del bloque. Sin esto el badge y la foto insertada
+   se anclan al viewport en vez de a la composición, y terminan en
+   cualquier parte de la página. */
+.editorial {
+  position: relative;
+}
+
+.editorial-media {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--radius-md);
+  background-color: var(--surface-2);
+  /* Degradado de respaldo por debajo del <img>, visible si el archivo falta */
+  background-image: linear-gradient(140deg, #23232a 0%, #3d3d45 100%);
+  /* Sin overflow:hidden a propósito: la foto insertada tiene que poder
+     sobresalir. Las imágenes heredan el radio y se recortan solas. */
+}
+
+/* Las fotos van en <img> y no como background-image. Una URL relativa
+   dentro de una variable CSS NO se resuelve contra el documento sino
+   contra la hoja de estilos donde se usa el var(): estando este archivo
+   en assets/css/, el navegador pedía assets/css/assets/imagen/... y daba
+   404 en silencio. Con <img> el problema desaparece y además hay alt. */
+.editorial-media__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: inherit;
+}
+
+/* Secondary image tucked into the corner, overlapping the main one */
+.editorial-media__inset {
+  position: absolute;
+  inset: auto -8% -8% auto;
+  width: 46%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  border: 8px solid var(--white);
+  background-color: var(--surface-2);
+  background-image: linear-gradient(140deg, #3d3d45 0%, #23232a 100%);
+  overflow: hidden;
+}
+
+.section--alt .editorial-media__inset {
+  border-color: var(--bg-alt);
+}
+
+/* Red badge with a headline figure */
+.editorial-badge {
+  position: absolute;
+  inset: auto auto 6% -6%;
+  padding: var(--space-md) var(--space-lg);
+  background-color: var(--brand-red);
+  color: var(--white);
+  border-radius: var(--radius-md);
+  /* Sombra neutra: la roja genera un halo que ensucia el borde del bloque */
+  box-shadow: var(--shadow-md);
+}
+
+.editorial-badge strong {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.editorial-badge span {
+  font-size: var(--text-sm);
+  opacity: 0.9;
+}
+
+@media (max-width: 700px) {
+  .editorial-media {
+    aspect-ratio: 3 / 4;
+  }
+
+  .editorial-badge {
+    inset: auto auto var(--space-sm) var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  /* En pantalla angosta la foto insertada se amontona contra el badge y la
+     composición superpuesta deja de leerse: mejor una sola imagen limpia. */
+  .editorial-media__inset {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   2. Prose block
+   -------------------------------------------------------------------------- */
+/* Sin esto el párrafo se pega al titular: los h2 no traen margen inferior
+   propio y en los bloques .prose no hay ningún .section-head que lo aporte. */
+.prose h2,
+.prose h3 {
+  margin-bottom: var(--space-sm);
+}
+
+.prose p + p {
+  margin-top: var(--space-sm);
+}
+
+.prose p {
+  color: var(--text-muted);
+}
+
+.prose .lead {
+  font-size: var(--text-lg);
+  color: var(--ink-800);
+  font-weight: 600;
+}
+
+/* Pull quote with a red rule instead of quotation marks */
+.pull-quote {
+  margin-block: var(--space-lg);
+  padding-left: var(--space-md);
+  border-left: 3px solid var(--brand-red);
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 500;
+  font-style: normal;
+  line-height: 1.45;
+  color: var(--ink-900);
+}
+
+.pull-quote cite {
+  display: block;
+  margin-top: var(--space-2xs);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-style: normal;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   3. Checklist
+   -------------------------------------------------------------------------- */
+.checklist {
+  display: grid;
+  gap: var(--space-xs);
+  margin-top: var(--space-lg);
+}
+
+.checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-xs);
+}
+
+.checklist svg {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--brand-red);
+}
+
+.checklist strong {
+  font-family: var(--font-heading);
+  display: block;
+}
+
+.checklist p {
+  font-size: var(--text-base);
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* --------------------------------------------------------------------------
+   4. Contact page
+   -------------------------------------------------------------------------- */
+.contact-info {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.contact-info__item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--border);
+}
+
+.contact-info__item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.contact-info__icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background-color: var(--brand-red-soft);
+  color: var(--brand-red);
+}
+
+.contact-info__icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* display:block en ambos: son <span> y <a>, elementos inline por defecto,
+   y sin esto la etiqueta y el valor se apilan en la misma línea
+   ("Teléfono +51 943704298") en vez de uno debajo del otro. */
+.contact-info__label {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--ink-900);
+}
+
+.contact-info__value {
+  display: block;
+  font-size: var(--text-base);
+  color: var(--text-muted);
+}
+
+a.contact-info__value:hover {
+  color: var(--brand-red);
+}
+
+.contact-hours {
+  display: grid;
+  gap: var(--space-2xs);
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--border);
+  font-size: var(--text-base);
+}
+
+.contact-hours li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding-block: 4px;
+  color: var(--text-muted);
+}
+
+.contact-hours strong {
+  color: var(--ink-900);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  /* Tabular figures keep the hour column aligned */
+  font-variant-numeric: tabular-nums;
+}
+
+.map-embed {
+  aspect-ratio: 21 / 9;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background-color: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.map-embed iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+@media (max-width: 700px) {
+  .map-embed {
+    aspect-ratio: 4 / 3;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   5. 404
+   -------------------------------------------------------------------------- */
+.error-page {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: var(--space-2xl) var(--gutter);
+  text-align: center;
+  background-color: var(--ink-900);
+  color: var(--text-on-dark);
+}
+
+.error-page__code {
+  font-family: var(--font-heading);
+  font-size: clamp(5rem, 18vw, 11rem);
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  color: var(--brand-red);
+}
+
+.error-page h1 {
+  color: var(--white);
+  margin-block: var(--space-md) var(--space-sm);
+}
+
+.error-page p {
+  margin-inline: auto;
+  margin-bottom: var(--space-xl);
+}
+
+.error-page img {
+  height: 58px;
+  width: auto;
+  margin-inline: auto;
+  margin-bottom: var(--space-xl);
+}

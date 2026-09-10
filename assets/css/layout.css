@@ -1,0 +1,807 @@
+/* ==========================================================================
+   Quantuk Perú — layout.css
+   Containers, header (topbar + red navbar), mobile drawer and footer.
+   These blocks are identical across all four pages.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Containers and section rhythm
+   -------------------------------------------------------------------------- */
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.container--narrow {
+  max-width: var(--container-narrow);
+}
+
+.section {
+  padding-block: var(--section-y);
+  position: relative;
+}
+
+.section--alt {
+  background-color: var(--bg-alt);
+}
+
+.section--dark {
+  background-color: var(--bg-dark);
+  color: var(--text-on-dark);
+}
+
+.section--dark h2,
+.section--dark h3,
+.section--dark h4 {
+  color: var(--white);
+}
+
+.section--tight {
+  padding-block: clamp(2.5rem, 1.5rem + 4vw, 4.5rem);
+}
+
+/* Section heading group */
+.section-head {
+  max-width: 62ch;
+  margin-bottom: clamp(2rem, 1.2rem + 3vw, 3.5rem);
+}
+
+.section-head--center {
+  margin-inline: auto;
+  text-align: center;
+}
+
+.section-head--center p {
+  margin-inline: auto;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-red);
+  margin-bottom: var(--space-sm);
+}
+
+/* Short red rule that precedes the eyebrow text */
+.eyebrow::before {
+  content: "";
+  width: 28px;
+  height: 3px;
+  background-color: var(--brand-red);
+  border-radius: var(--radius-pill);
+}
+
+.eyebrow--center::before {
+  display: none;
+}
+
+.section--dark .eyebrow {
+  color: var(--brand-red);
+}
+
+.section-head p {
+  margin-top: var(--space-sm);
+  color: var(--text-muted);
+}
+
+.section--dark .section-head p {
+  color: var(--text-on-dark);
+}
+
+/* --------------------------------------------------------------------------
+   1b. Swiss grid — 12 columns
+   Content sections compose on this grid instead of stacking cards.
+   Column spans collapse to full width below 900px.
+   -------------------------------------------------------------------------- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: clamp(1.25rem, 2.5vw, 2.5rem);
+}
+
+.grid--tight {
+  gap: clamp(1rem, 1.5vw, 1.5rem);
+}
+
+/* grid-column-end y NO el atajo grid-column.
+   `grid-column: span 6` coloca el span en la posición de INICIO. Al
+   combinarse con .start-7, que fija ese inicio en 7, el fin queda en auto
+   y el bloque colapsa a una sola columna: el texto se estrangula y cada
+   palabra cae en su propia línea. Separando inicio y fin nunca compiten. */
+.col-2 { grid-column-end: span 2; }
+.col-3 { grid-column-end: span 3; }
+.col-4 { grid-column-end: span 4; }
+.col-5 { grid-column-end: span 5; }
+.col-6 { grid-column-end: span 6; }
+.col-7 { grid-column-end: span 7; }
+.col-8 { grid-column-end: span 8; }
+.col-9 { grid-column-end: span 9; }
+.col-10 { grid-column-end: span 10; }
+.col-12 { grid-column-end: span 12; }
+
+/* Asymmetric offsets — the Swiss move that keeps blocks off dead centre.
+   Escala completa a propósito: una clase start-N sin definir no falla de
+   forma visible, simplemente deja el bloque pegado al margen y el diseño
+   se ve corrido sin que nada avise. */
+.start-2 { grid-column-start: 2; }
+.start-3 { grid-column-start: 3; }
+.start-4 { grid-column-start: 4; }
+.start-5 { grid-column-start: 5; }
+.start-6 { grid-column-start: 6; }
+.start-7 { grid-column-start: 7; }
+.start-8 { grid-column-start: 8; }
+.start-9 { grid-column-start: 9; }
+.start-10 { grid-column-start: 10; }
+
+.self-center { align-self: center; }
+.self-end { align-self: end; }
+
+@media (max-width: 1024px) {
+  .col-2, .col-3, .col-4 { grid-column-end: span 6; }
+  .col-5, .col-6, .col-7, .col-8, .col-9, .col-10 { grid-column-end: span 12; }
+  /* Un solo selector, así ninguna clase start-N nueva se queda fuera */
+  [class*="start-"] { grid-column-start: auto; }
+}
+
+@media (max-width: 700px) {
+  [class*="col-"] { grid-column-end: span 12; }
+}
+
+/* --------------------------------------------------------------------------
+   2. Scroll progress bar
+   -------------------------------------------------------------------------- */
+.scroll-progress {
+  position: fixed;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 3px;
+  z-index: calc(var(--z-header) + 1);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  background-color: var(--brand-red);
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+   3. Site header
+   Absolute over the hero so the photo shows through, exactly like the brief.
+   Turns into a compact fixed bar once the user scrolls past the hero top.
+   -------------------------------------------------------------------------- */
+.site-header {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: var(--z-header);
+}
+
+.site-header::after {
+  /* Backdrop that only appears in the stuck state */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-color: var(--ink-900);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-base) var(--ease-out);
+}
+
+/* --- Topbar (black strip: logo + contact details) --- */
+.topbar {
+  position: relative;
+  z-index: var(--z-raised);
+  background-color: var(--ink-900);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  transition: padding var(--dur-base) var(--ease-out);
+}
+
+/* Logo y datos de contacto se centran como un solo grupo, con holgura a
+   ambos lados, tal como en la referencia — no separados a los extremos. */
+.topbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1.5rem, 6vw, 5.5rem);
+  min-height: var(--topbar-h);
+  padding-block: var(--space-xs);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.brand img {
+  width: auto;
+  height: clamp(38px, 3.2vw, 52px);
+  transition: height var(--dur-base) var(--ease-out);
+}
+
+.topbar__contacts {
+  display: flex;
+  align-items: center;
+  gap: clamp(1.25rem, 3vw, 3rem);
+}
+
+.topbar__contact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.topbar__icon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background-color: var(--brand-red);
+  color: var(--white);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.topbar__icon svg {
+  width: 19px;
+  height: 19px;
+}
+
+.topbar__contact:hover .topbar__icon {
+  transform: translateY(-2px) scale(1.05);
+}
+
+.topbar__meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.35;
+}
+
+.topbar__label {
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--white);
+}
+
+.topbar__value {
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.68);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+a.topbar__value:hover {
+  color: var(--brand-red);
+}
+
+/* --- Red navigation bar --- */
+.navbar-wrap {
+  position: relative;
+  z-index: var(--z-base);
+}
+
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-lg);
+  min-height: var(--navbar-h);
+  padding-inline: clamp(1rem, 2.5vw, 2rem);
+  background-color: var(--brand-red);
+  border-radius: var(--radius-xs);
+  box-shadow: var(--shadow-md);
+  transition: border-radius var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out);
+}
+
+.navbar__menu {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2vw, 2.25rem);
+}
+
+.navbar__link {
+  position: relative;
+  display: inline-block;
+  padding-block: var(--space-xs);
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--white);
+  white-space: nowrap;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+/* Underline grows from the centre on hover and stays put on the active page */
+.navbar__link::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 0;
+  height: 2px;
+  background-color: var(--white);
+  border-radius: var(--radius-pill);
+  transform: translateX(-50%);
+  transition: width var(--dur-base) var(--ease-out);
+}
+
+.navbar__link:hover::after,
+.navbar__link:focus-visible::after {
+  width: 100%;
+}
+
+.navbar__link[aria-current="page"] {
+  opacity: 1;
+}
+
+.navbar__link[aria-current="page"]::after {
+  width: 100%;
+}
+
+.navbar__link--external {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.navbar__link--external svg {
+  width: 13px;
+  height: 13px;
+  opacity: 0.75;
+}
+
+.navbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+}
+
+/* --- Stuck state --- */
+.site-header.is-stuck {
+  position: fixed;
+  animation: header-drop var(--dur-slow) var(--ease-out) both;
+}
+
+.site-header.is-stuck::after {
+  opacity: 1;
+}
+
+.site-header.is-stuck .topbar {
+  border-bottom-color: transparent;
+}
+
+.site-header.is-stuck .topbar__inner {
+  min-height: 0;
+  padding-block: 0;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height var(--dur-base) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out), padding var(--dur-base) var(--ease-out);
+}
+
+.site-header.is-stuck .navbar {
+  border-radius: 0;
+  box-shadow: 0 10px 30px rgba(14, 14, 16, 0.28);
+}
+
+/* Compact brand shown only while stuck, so the logo never disappears */
+.navbar__brand {
+  display: none;
+  align-items: center;
+  margin-right: var(--space-md);
+}
+
+.navbar__brand img {
+  height: 34px;
+  width: auto;
+}
+
+.site-header.is-stuck .navbar__brand {
+  display: inline-flex;
+}
+
+@keyframes header-drop {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   4. Mobile drawer
+   -------------------------------------------------------------------------- */
+.nav-toggle {
+  display: none;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-sm);
+  color: var(--white);
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+/* position:relative es obligatorio acá: las dos barras son pseudo-elementos
+   absolutos y sin esto se anclan al .site-header, que sí está posicionado,
+   y el icono aparece descolocado fuera del botón. */
+.nav-toggle__bars {
+  position: relative;
+}
+
+.nav-toggle__bars,
+.nav-toggle__bars::before,
+.nav-toggle__bars::after {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background-color: currentColor;
+  border-radius: var(--radius-pill);
+  transition: transform var(--dur-base) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out);
+}
+
+.nav-toggle__bars::before,
+.nav-toggle__bars::after {
+  content: "";
+  position: absolute;
+}
+
+.nav-toggle__bars::before {
+  transform: translateY(-7px);
+}
+
+.nav-toggle__bars::after {
+  transform: translateY(7px);
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle__bars {
+  background-color: transparent;
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle__bars::before {
+  transform: rotate(45deg);
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle__bars::after {
+  transform: rotate(-45deg);
+}
+
+.drawer-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-drawer) - 1);
+  background-color: rgba(14, 14, 16, 0.55);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--dur-base) var(--ease-out),
+    visibility var(--dur-base) var(--ease-out);
+}
+
+.drawer-scrim.is-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.drawer {
+  position: fixed;
+  inset: 0 0 0 auto;
+  z-index: var(--z-drawer);
+  width: min(340px, 88vw);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  padding: var(--space-lg) var(--space-md) var(--space-2xl);
+  background-color: var(--ink-900);
+  color: var(--white);
+  transform: translateX(100%);
+  visibility: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  transition: transform var(--dur-slow) var(--ease-out),
+    visibility var(--dur-slow) var(--ease-out);
+}
+
+.drawer.is-open {
+  transform: translateX(0);
+  visibility: visible;
+}
+
+.drawer__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.drawer__head img {
+  height: 40px;
+  width: auto;
+}
+
+.drawer__close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  color: var(--white);
+  background-color: rgba(255, 255, 255, 0.1);
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+.drawer__close:hover {
+  background-color: var(--brand-red);
+}
+
+.drawer__close svg {
+  width: 20px;
+  height: 20px;
+}
+
+.drawer__menu {
+  display: flex;
+  flex-direction: column;
+}
+
+.drawer__link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  min-height: 54px;
+  padding-inline: var(--space-2xs);
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  transition: color var(--dur-fast) var(--ease-out),
+    padding-left var(--dur-fast) var(--ease-out);
+}
+
+.drawer__link:hover,
+.drawer__link[aria-current="page"] {
+  color: var(--brand-red);
+  padding-left: var(--space-sm);
+}
+
+.drawer__link svg {
+  width: 15px;
+  height: 15px;
+  opacity: 0.6;
+}
+
+.drawer__contacts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-top: auto;
+  padding-top: var(--space-md);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.drawer__contacts a {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  min-height: 44px;
+}
+
+.drawer__contacts svg {
+  width: 16px;
+  height: 16px;
+  color: var(--brand-red);
+  flex-shrink: 0;
+}
+
+/* --------------------------------------------------------------------------
+   5. Footer
+   -------------------------------------------------------------------------- */
+.site-footer {
+  background-color: var(--ink-900);
+  color: rgba(255, 255, 255, 0.66);
+  padding-top: clamp(3rem, 2rem + 4vw, 5rem);
+}
+
+.site-footer__grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1.2fr;
+  gap: clamp(2rem, 4vw, 4rem);
+  padding-bottom: var(--space-2xl);
+}
+
+.site-footer__brand img {
+  height: 56px;
+  width: auto;
+  margin-bottom: var(--space-md);
+}
+
+.site-footer__brand p {
+  font-size: var(--text-sm);
+  max-width: 34ch;
+}
+
+.footer-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: var(--space-md);
+  position: relative;
+  padding-bottom: var(--space-2xs);
+}
+
+.footer-title::after {
+  content: "";
+  position: absolute;
+  inset: auto auto 0 0;
+  width: 26px;
+  height: 2px;
+  background-color: var(--brand-red);
+  border-radius: var(--radius-pill);
+}
+
+.footer-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  font-size: var(--text-sm);
+}
+
+.footer-list a {
+  display: inline-block;
+  padding-block: 4px;
+  transition: color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.footer-list a:hover {
+  color: var(--brand-red);
+  transform: translateX(4px);
+}
+
+.footer-contact {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  font-size: var(--text-sm);
+}
+
+.footer-contact li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-xs);
+}
+
+.footer-contact svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--brand-red);
+}
+
+.footer-social {
+  display: flex;
+  gap: var(--space-2xs);
+  margin-top: var(--space-md);
+}
+
+.footer-social a {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--white);
+  transition: background-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.footer-social a:hover {
+  background-color: var(--brand-red);
+  transform: translateY(-3px);
+}
+
+.footer-social svg {
+  width: 19px;
+  height: 19px;
+}
+
+.site-footer__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  padding-block: var(--space-md);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: var(--text-sm);
+}
+
+.site-footer__bottom a:hover {
+  color: var(--brand-red);
+}
+
+/* --------------------------------------------------------------------------
+   6. Responsive
+   -------------------------------------------------------------------------- */
+@media (max-width: 1100px) {
+  .topbar__contacts {
+    gap: var(--space-md);
+  }
+
+  /* Se cae "Ubicación", el único bloque que no es accionable.
+     Teléfono y correo se mantienen completos: ocultar sus etiquetas
+     dejaría el icono sin el enlace, que vive dentro del texto. */
+  .topbar__contact:nth-child(2) {
+    display: none;
+  }
+
+  .site-footer__grid {
+    grid-template-columns: 1fr 1fr;
+    row-gap: var(--space-xl);
+  }
+}
+
+@media (max-width: 900px) {
+  /* La topbar desaparece y su alto pasa a cero: todos los calc() del hero
+     que dependen de --topbar-h se reajustan solos, sin duplicar reglas. */
+  :root {
+    --topbar-h: 0px;
+  }
+
+  .topbar {
+    display: none;
+  }
+
+  .navbar__menu,
+  .navbar__actions .btn {
+    display: none;
+  }
+
+  .nav-toggle {
+    display: grid;
+  }
+
+  /* A ancho completo en móvil: la barra roja deja de flotar */
+  .navbar-wrap {
+    padding-inline: 0;
+  }
+
+  .navbar {
+    justify-content: space-between;
+    border-radius: 0;
+  }
+
+  /* El logo queda solo en la barra roja, que ya trae el botón del menú */
+  .navbar__brand {
+    display: inline-flex;
+  }
+}
+
+@media (max-width: 640px) {
+  .site-footer__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .site-footer__bottom {
+    justify-content: center;
+    text-align: center;
+  }
+}

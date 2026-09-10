@@ -1,0 +1,8 @@
+# Quantuk Perú — robots.txt
+User-agent: *
+Allow: /
+
+# La intranet no debe indexarse
+Disallow: /404.html
+
+Sitemap: https://quantukperu.com/sitemap.xml

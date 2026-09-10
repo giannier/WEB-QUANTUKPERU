@@ -1,0 +1,1347 @@
+/* ==========================================================================
+   Quantuk Perú — components.css
+   Reusable pieces: buttons, hero carousel, tabs, timeline, master-detail,
+   counters, forms, quote modal and scroll reveal.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. Buttons
+   -------------------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2xs);
+  min-height: 48px;
+  padding: 0 var(--space-lg);
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* Rojo plano en reposo, como en la referencia. El realce sólo aparece al
+   pasar el mouse: un halo permanente ensucia el borde del botón. */
+.btn--primary {
+  background-color: var(--brand-red);
+  color: var(--white);
+}
+
+.btn--primary:hover {
+  background-color: var(--brand-red-dark);
+  box-shadow: var(--shadow-red);
+}
+
+.btn--light {
+  background-color: var(--white);
+  color: var(--brand-red);
+}
+
+.btn--light:hover {
+  background-color: var(--ink-900);
+  color: var(--white);
+}
+
+.btn--dark {
+  background-color: var(--ink-900);
+  color: var(--white);
+}
+
+.btn--dark:hover {
+  background-color: var(--brand-red);
+}
+
+.btn--ghost {
+  background-color: transparent;
+  color: var(--white);
+  border: 2px solid rgba(255, 255, 255, 0.45);
+}
+
+.btn--ghost:hover {
+  background-color: var(--white);
+  color: var(--ink-900);
+  border-color: var(--white);
+}
+
+.btn--outline {
+  background-color: transparent;
+  color: var(--ink-900);
+  border: 2px solid var(--line-strong);
+}
+
+.btn--outline:hover {
+  border-color: var(--brand-red);
+  color: var(--brand-red);
+}
+
+.btn--block {
+  width: 100%;
+}
+
+.btn[disabled],
+.btn[aria-busy="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Text link with an arrow that slides on hover */
+.link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  min-height: 44px;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  color: var(--brand-red);
+}
+
+.link-arrow svg {
+  width: 17px;
+  height: 17px;
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.link-arrow:hover svg {
+  transform: translateX(5px);
+}
+
+/* --------------------------------------------------------------------------
+   2. Hero carousel
+   -------------------------------------------------------------------------- */
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  /* 680px de piso: por debajo, en una ventana de escritorio baja, el
+     titular de tres líneas más el header no entran y el contenido se
+     recorta contra los controles del carrusel. */
+  min-height: clamp(680px, 100dvh, 1040px);
+  padding-top: calc(var(--topbar-h) + var(--navbar-h) + var(--space-2xl));
+  padding-bottom: var(--space-3xl);
+  background-color: var(--ink-900);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Stacking inside the hero, lowest first:
+   1. .hero__slides  — media, scrim and copy of each slide
+   2. .hero__lines   — decorative line-art
+   3. .hero__controls / .hero__progress
+   Within a slide the natural DOM order does the work: media, then scrim,
+   then content. No negative z-index anywhere, or the copy would sink
+   behind the section background. */
+.hero__slides {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.hero__slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--dur-slow) var(--ease-out),
+    visibility var(--dur-slow) var(--ease-out);
+}
+
+.hero__slide.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* La foto va en un <img> real, no como background-image. Un fondo CSS no
+   lo indexa Google Imágenes, no admite texto alternativo, y el navegador
+   no lo descubre hasta parsear el CSS — y esta imagen es el LCP de la
+   página. El degradado queda debajo como respaldo si el archivo falta. */
+.hero__media {
+  position: absolute;
+  inset: 0;
+  background-color: var(--ink-900);
+  background-image: linear-gradient(120deg, #141416 0%, #1d1d21 55%, #26262b 100%);
+}
+
+.hero__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.hero__slide.is-active .hero__media img {
+  animation: ken-burns 9s var(--ease-out) forwards;
+}
+
+@keyframes ken-burns {
+  from {
+    transform: scale(1.06);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Velo oscuro: garantiza el contraste del texto blanco sea cual sea la foto.
+   Simétrico a propósito. La versión anterior cargaba el peso a la izquierda,
+   que servía cuando el texto estaba alineado a ese lado; con la composición
+   centrada, un lado más claro que el otro deja media frase con menos
+   contraste que la otra mitad. */
+.hero__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+      90deg,
+      rgba(10, 10, 12, 0.84) 0%,
+      rgba(10, 10, 12, 0.62) 32%,
+      rgba(10, 10, 12, 0.6) 68%,
+      rgba(10, 10, 12, 0.74) 100%
+    ),
+    linear-gradient(to top, rgba(10, 10, 12, 0.82) 0%, transparent 48%);
+}
+
+/* Las curvas cruzan todo el ancho como en la referencia. Con el texto ahora
+   centrado pasan por detrás de él, así que la opacidad baja lo suficiente
+   para no comprometer el contraste del titular. */
+.hero__lines {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  opacity: 0.28;
+  pointer-events: none;
+  will-change: transform;
+}
+
+@media (max-width: 900px) {
+  .hero__lines {
+    display: none;
+  }
+}
+
+.hero__lines svg {
+  width: 100%;
+  height: 100%;
+}
+
+.hero__content {
+  position: relative;
+  width: 100%;
+}
+
+/* Composición centrada sobre el eje vertical de la página */
+.hero__body {
+  max-width: 820px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.hero__eyebrow {
+  display: inline-block;
+  padding: 7px var(--space-md);
+  margin-bottom: var(--space-md);
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--white);
+  background-color: var(--brand-red);
+  border-radius: var(--radius-xs);
+}
+
+/* Medidas tomadas de la referencia: ~62px de cuerpo sobre un bloque de
+   800px. Esa relación es la que produce el titular compacto de tres
+   líneas; con más cuerpo o menos ancho se parte en cuatro.
+
+   La clase declara la tipografía completa y no la hereda de la regla de
+   los h1..h6: sólo la primera diapositiva es un <h1> — las otras tres son
+   <p> para que la página tenga un único h1, como pide el SEO. Sin esto
+   los slides 2, 3 y 4 salían en Open Sans regular en vez de Poppins bold. */
+.hero__title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: clamp(2.5rem, 1.55rem + 3.2vw, 3.875rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  color: var(--white);
+  max-width: 800px;
+  margin-inline: auto;
+  margin-bottom: var(--space-md);
+}
+
+.hero__text {
+  font-size: var(--text-lg);
+  color: rgba(255, 255, 255, 0.86);
+  max-width: 52ch;
+  margin-inline: auto;
+  margin-bottom: var(--space-xl);
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+/* Staggered entrance for the active slide's copy */
+.hero__slide.is-active .hero__eyebrow,
+.hero__slide.is-active .hero__title,
+.hero__slide.is-active .hero__text,
+.hero__slide.is-active .hero__actions {
+  animation: hero-in var(--dur-reveal) var(--ease-out) both;
+}
+
+.hero__slide.is-active .hero__title {
+  animation-delay: 100ms;
+}
+
+.hero__slide.is-active .hero__text {
+  animation-delay: 200ms;
+}
+
+.hero__slide.is-active .hero__actions {
+  animation-delay: 300ms;
+}
+
+@keyframes hero-in {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* El texto de cada slide vive dentro del slide para que foto y copy
+   cambien juntos. El padding superior libera el alto del header.
+
+   `safe center` es la clave del encuadre: con `center` a secas, un titular
+   más alto que el espacio disponible desborda hacia ARRIBA y se mete debajo
+   de la barra roja del menú. Con `safe`, cuando no entra, el navegador
+   alinea al inicio en vez de desbordar. La declaración `center` previa
+   queda como respaldo para navegadores que no lo soporten. */
+.hero__slide .hero__content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  align-items: safe center;
+  padding-top: calc(var(--topbar-h) + var(--navbar-h) + var(--space-md));
+  padding-bottom: var(--space-2xl);
+  overflow: hidden;
+}
+
+.hero__slide .container {
+  width: 100%;
+}
+
+/* --- Controls --- */
+.hero__controls {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(1.5rem, 4vh, 3rem);
+  z-index: var(--z-raised);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  width: 100%;
+  max-width: var(--container);
+  padding-inline: var(--gutter);
+  transform: translateX(-50%);
+}
+
+.hero__dots {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+.hero__dot {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+}
+
+.hero__dot::before {
+  content: "";
+  width: 30px;
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background-color: rgba(255, 255, 255, 0.32);
+  transition: background-color var(--dur-base) var(--ease-out),
+    width var(--dur-base) var(--ease-out);
+}
+
+.hero__dot[aria-selected="true"]::before {
+  width: 52px;
+  background-color: var(--brand-red);
+}
+
+.hero__arrows {
+  display: flex;
+  gap: var(--space-2xs);
+  margin-left: auto;
+}
+
+.hero__arrow {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  color: var(--white);
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  background-color: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(6px);
+  transition: background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+
+.hero__arrow:hover {
+  background-color: var(--brand-red);
+  border-color: var(--brand-red);
+  transform: scale(1.06);
+}
+
+.hero__arrow svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Autoplay progress line pinned to the bottom edge */
+.hero__progress {
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: var(--z-raised);
+  height: 3px;
+  background-color: rgba(255, 255, 255, 0.14);
+}
+
+.hero__progress span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: var(--brand-red);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
+.hero__progress span.is-running {
+  animation: hero-progress var(--hero-delay, 6500ms) linear forwards;
+}
+
+@keyframes hero-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   3. Page banner (inner pages)
+   -------------------------------------------------------------------------- */
+.page-hero {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  /* Más alto que el mínimo anterior: con 360px el header se comía la franja
+     donde están los rostros y las fotos quedaban decapitadas. */
+  min-height: clamp(440px, 60vh, 600px);
+  padding-top: calc(var(--topbar-h) + var(--navbar-h) + var(--space-xl));
+  padding-bottom: var(--space-2xl);
+  background-color: var(--ink-900);
+  background-image: linear-gradient(120deg, #141416 0%, #1d1d21 55%, #26262b 100%);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Foto de la cabecera. Capas: imagen (-2), velo oscuro (-1), texto encima.
+
+   object-position anclado arriba, no al centro. Con `center` el recorte se
+   reparte entre arriba y abajo, y como las personas están en la mitad
+   superior del encuadre, las cabezas eran lo primero en perderse. Anclando
+   arriba, el recorte se lo lleva todo el piso, que no aporta nada. */
+.page-hero__bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+/* Velo asimétrico a propósito: fuerte donde va el titular blanco (izquierda),
+   y cae rápido después del 70% para que se distingan las caras del tercio
+   derecho. Con un 50% parejo, las fotos de tono bajo quedaban ilegibles. */
+.page-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    100deg,
+    rgba(10, 10, 12, 0.95) 0%,
+    rgba(10, 10, 12, 0.86) 45%,
+    rgba(10, 10, 12, 0.6) 72%,
+    rgba(10, 10, 12, 0.28) 100%
+  );
+}
+
+.page-hero__title {
+  font-size: var(--text-3xl);
+  color: var(--white);
+  margin-bottom: var(--space-sm);
+}
+
+.page-hero__text {
+  font-size: var(--text-lg);
+  color: rgba(255, 255, 255, 0.82);
+  max-width: 58ch;
+}
+
+/* Breadcrumbs — orientation on 3-level hierarchies */
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2xs);
+  margin-bottom: var(--space-md);
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.breadcrumb li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+.breadcrumb li + li::before {
+  content: "/";
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.breadcrumb a:hover {
+  color: var(--brand-red);
+}
+
+.breadcrumb [aria-current="page"] {
+  color: var(--white);
+}
+
+/* --------------------------------------------------------------------------
+   4. Tabs (Misión / Visión / Valores)
+   -------------------------------------------------------------------------- */
+.tabs__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-lg);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--space-lg);
+}
+
+.tabs__tab {
+  position: relative;
+  padding: var(--space-xs) 0 var(--space-sm);
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--slate-500);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.tabs__tab::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 -1px 0;
+  height: 3px;
+  background-color: var(--brand-red);
+  border-radius: var(--radius-pill);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.tabs__tab:hover {
+  color: var(--ink-900);
+}
+
+.tabs__tab[aria-selected="true"] {
+  color: var(--ink-900);
+}
+
+.tabs__tab[aria-selected="true"]::after {
+  transform: scaleX(1);
+}
+
+.tabs__panel[hidden] {
+  display: none;
+}
+
+.tabs__panel {
+  animation: fade-up var(--dur-base) var(--ease-out) both;
+}
+
+.tabs__panel p + p {
+  margin-top: var(--space-sm);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   5. Master-detail services panel — the no-cards answer
+   -------------------------------------------------------------------------- */
+.service-panel {
+  display: grid;
+  grid-template-columns: minmax(280px, 5fr) 7fr;
+  gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: start;
+}
+
+.service-nav {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--border);
+}
+
+.service-nav__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  min-height: 76px;
+  padding: var(--space-sm) var(--space-2xs);
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  color: var(--slate-600);
+  transition: color var(--dur-fast) var(--ease-out),
+    padding-left var(--dur-base) var(--ease-out);
+}
+
+.service-nav__num {
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--slate-400);
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.service-nav__name {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.service-nav__item svg {
+  width: 18px;
+  height: 18px;
+  margin-left: auto;
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+}
+
+.service-nav__item:hover {
+  color: var(--ink-900);
+  padding-left: var(--space-sm);
+}
+
+/* Dos atributos para el mismo estado: aria-selected en modo pestañas
+   (escritorio) y aria-expanded en modo acordeón (móvil). */
+.service-nav__item[aria-selected="true"],
+.service-nav__item[aria-expanded="true"] {
+  color: var(--brand-red);
+  padding-left: var(--space-sm);
+}
+
+.service-nav__item[aria-selected="true"] .service-nav__num,
+.service-nav__item[aria-expanded="true"] .service-nav__num {
+  color: var(--brand-red);
+}
+
+.service-nav__item[aria-selected="true"] svg {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.service-detail[hidden] {
+  display: none;
+}
+
+.service-detail {
+  animation: fade-up var(--dur-base) var(--ease-out) both;
+}
+
+.service-detail__media {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin-bottom: var(--space-lg);
+  border-radius: var(--radius-md);
+  background-color: var(--surface-2);
+  background-image: linear-gradient(120deg, #23232a 0%, #3a3a42 100%);
+  object-fit: cover;
+  object-position: center;
+}
+
+.service-detail h3 {
+  margin-bottom: var(--space-sm);
+}
+
+.service-detail__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-xs) var(--space-lg);
+  margin: var(--space-lg) 0;
+}
+
+.service-detail__list li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2xs);
+  padding-block: 6px;
+  font-size: var(--text-base);
+}
+
+.service-detail__list svg {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+  margin-top: 4px;
+  color: var(--brand-red);
+}
+
+/* --- Modo acordeón (móvil) ---
+   El JS mueve cada .service-detail dentro de .service-nav, justo después
+   de su botón, para que el contenido se abra donde el visitante tocó y no
+   al final de la lista. */
+@media (max-width: 860px) {
+  .service-panel {
+    grid-template-columns: 1fr;
+  }
+
+  /* La columna derecha queda vacía cuando los detalles se mudan */
+  .service-details:empty {
+    display: none;
+  }
+
+  .service-detail {
+    padding: var(--space-md) 0 var(--space-lg);
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* En acordeón el título del panel repite el botón que acabas de tocar.
+     Se oculta a la vista pero se mantiene en el DOM: sigue estando para
+     lectores de pantalla y para el indexado. */
+  .service-detail h2 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* La flecha pasa a ser indicador de plegado: siempre visible, apunta
+     hacia abajo cuando está cerrado y hacia arriba cuando está abierto. */
+  .service-nav__item svg {
+    opacity: 0.5;
+    transform: rotate(90deg);
+  }
+
+  .service-nav__item[aria-expanded="true"] svg {
+    opacity: 1;
+    transform: rotate(-90deg);
+  }
+
+  /* El botón abierto cede su línea inferior al panel que lo continúa */
+  .service-nav__item[aria-expanded="true"] {
+    border-bottom-color: transparent;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   6. Numbered feature rows — no boxes, just rules and rhythm
+   -------------------------------------------------------------------------- */
+.feature-rows {
+  border-top: 1px solid var(--border);
+}
+
+.feature-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 1.3fr;
+  gap: clamp(1rem, 3vw, 3rem);
+  align-items: baseline;
+  padding-block: clamp(1.75rem, 3vw, 2.75rem);
+  border-bottom: 1px solid var(--border);
+  transition: background-color var(--dur-base) var(--ease-out);
+}
+
+.feature-row:hover {
+  background-color: var(--surface);
+}
+
+.feature-row__num {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--brand-red);
+  letter-spacing: -0.03em;
+}
+
+.feature-row h3 {
+  font-size: var(--text-lg);
+}
+
+.feature-row p {
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.section--dark .feature-rows,
+.section--dark .feature-row {
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.section--dark .feature-row:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+@media (max-width: 860px) {
+  .feature-row {
+    grid-template-columns: 60px 1fr;
+  }
+
+  .feature-row p {
+    grid-column: 2;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   7. Process timeline
+   -------------------------------------------------------------------------- */
+.timeline {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-lg);
+}
+
+/* Connecting rule that runs behind every step marker */
+.timeline::before {
+  content: "";
+  position: absolute;
+  inset: 27px 0 auto 0;
+  height: 2px;
+  background-color: var(--border);
+}
+
+.section--dark .timeline::before {
+  background-color: rgba(255, 255, 255, 0.14);
+}
+
+.timeline__step {
+  position: relative;
+  padding-right: var(--space-md);
+}
+
+.timeline__marker {
+  position: relative;
+  z-index: var(--z-base);
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: var(--space-md);
+  border-radius: 50%;
+  background-color: var(--white);
+  border: 2px solid var(--border);
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--slate-500);
+  transition: background-color var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out);
+}
+
+.section--dark .timeline__marker {
+  background-color: var(--ink-900);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.timeline__step:hover .timeline__marker,
+.timeline__step.is-visible .timeline__marker {
+  background-color: var(--brand-red);
+  border-color: var(--brand-red);
+  color: var(--white);
+}
+
+.timeline__step h3 {
+  font-size: var(--text-lg);
+  margin-bottom: var(--space-2xs);
+}
+
+.timeline__step p {
+  font-size: var(--text-base);
+  color: var(--text-muted);
+}
+
+.section--dark .timeline__step p {
+  color: var(--text-on-dark);
+}
+
+@media (max-width: 900px) {
+  .timeline {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .timeline::before {
+    inset: 0 auto 0 27px;
+    width: 2px;
+    height: 100%;
+  }
+
+  .timeline__step {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: var(--space-2xs) var(--space-md);
+    padding-bottom: var(--space-xl);
+  }
+
+  .timeline__marker {
+    margin-bottom: 0;
+    grid-row: span 2;
+  }
+
+  /* El paso tiene TRES hijos (marcador, título, párrafo) en una grilla de
+     dos columnas: sin esto el párrafo cae en la tercera celda, que es la
+     columna de 56px del marcador, y el texto sale de a una palabra por
+     línea. Título y párrafo se fuerzan a la columna ancha. */
+  .timeline__step h3,
+  .timeline__step p {
+    grid-column: 2;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   8. Stat counters
+   -------------------------------------------------------------------------- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-lg);
+}
+
+.stat {
+  padding-left: var(--space-md);
+  border-left: 3px solid var(--brand-red);
+}
+
+.stat__value {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--ink-900);
+  /* Tabular figures stop the layout jumping while the counter runs */
+  font-variant-numeric: tabular-nums;
+}
+
+.section--dark .stat__value {
+  color: var(--white);
+}
+
+.stat__label {
+  display: block;
+  margin-top: var(--space-2xs);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.section--dark .stat__label {
+  color: var(--text-on-dark);
+}
+
+@media (max-width: 860px) {
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-md);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   9. CTA band
+   -------------------------------------------------------------------------- */
+.cta-band {
+  position: relative;
+  background-color: var(--brand-red);
+  color: var(--white);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Oversized watermark glyph, clipped by the band */
+.cta-band::before {
+  content: "";
+  position: absolute;
+  inset: -40% -10% auto auto;
+  z-index: -1;
+  width: 620px;
+  height: 620px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.14) 0%, transparent 68%);
+}
+
+.cta-band__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xl);
+  flex-wrap: wrap;
+  padding-block: clamp(2.5rem, 4vw, 4rem);
+}
+
+.cta-band h2 {
+  color: var(--white);
+  max-width: 22ch;
+}
+
+.cta-band p {
+  margin-top: var(--space-sm);
+  color: rgba(255, 255, 255, 0.88);
+  max-width: 48ch;
+}
+
+/* --------------------------------------------------------------------------
+   10. Forms
+   -------------------------------------------------------------------------- */
+.form {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field__label {
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-800);
+}
+
+.field__label .req {
+  color: var(--brand-red);
+  margin-left: 2px;
+}
+
+.field__control {
+  width: 100%;
+  min-height: 52px;
+  padding: var(--space-xs) var(--space-sm);
+  background-color: var(--white);
+  color: var(--ink-800);
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  transition: border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+textarea.field__control {
+  min-height: 140px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+select.field__control {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235a616b' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-sm) center;
+  background-size: 18px;
+  padding-right: var(--space-2xl);
+}
+
+.field__control::placeholder {
+  color: var(--slate-400);
+}
+
+.field__control:focus {
+  outline: none;
+  border-color: var(--brand-red);
+  box-shadow: 0 0 0 4px rgba(237, 28, 36, 0.14);
+}
+
+.field__hint {
+  font-size: var(--text-xs);
+  color: var(--slate-500);
+}
+
+.field__error {
+  display: none;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--danger);
+}
+
+.field__error svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.field.has-error .field__control {
+  border-color: var(--danger);
+}
+
+.field.has-error .field__error {
+  display: flex;
+}
+
+/* Consent checkbox */
+.field--check {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: var(--space-2xs);
+}
+
+.field--check input {
+  width: 20px;
+  height: 20px;
+  margin-top: 3px;
+  accent-color: var(--brand-red);
+  flex-shrink: 0;
+}
+
+.field--check label {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.field--check a {
+  color: var(--brand-red);
+  text-decoration: underline;
+}
+
+/* Submit result message */
+.form__status {
+  display: none;
+  align-items: flex-start;
+  gap: var(--space-2xs);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+.form__status.is-visible {
+  display: flex;
+}
+
+.form__status--ok {
+  background-color: #e8f6f1;
+  color: var(--success);
+}
+
+.form__status--error {
+  background-color: #fdeceb;
+  color: var(--danger);
+}
+
+.form__status svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Enlace de respaldo cuando el navegador bloquea la ventana de WhatsApp */
+.form__status a {
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.form__status a[hidden] {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .form__row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   11. Quote modal
+   -------------------------------------------------------------------------- */
+.quote-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: grid;
+  place-items: center;
+  padding: var(--space-md);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--dur-base) var(--ease-out),
+    visibility var(--dur-base) var(--ease-out);
+}
+
+.quote-modal.is-open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.quote-modal__scrim {
+  position: absolute;
+  inset: 0;
+  background-color: rgba(10, 10, 12, 0.62);
+  backdrop-filter: blur(4px);
+}
+
+.quote-modal__dialog {
+  position: relative;
+  width: min(660px, 100%);
+  max-height: min(88dvh, 900px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  background-color: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(24px) scale(0.97);
+  transition: transform var(--dur-slow) var(--ease-out);
+}
+
+.quote-modal.is-open .quote-modal__dialog {
+  transform: translateY(0) scale(1);
+}
+
+.quote-modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.quote-modal__head p {
+  margin-top: var(--space-2xs);
+  font-size: var(--text-base);
+  color: var(--text-muted);
+}
+
+.quote-modal__close {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  color: var(--ink-800);
+  background-color: var(--surface-2);
+  transition: background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
+}
+
+.quote-modal__close:hover {
+  background-color: var(--brand-red);
+  color: var(--white);
+  transform: rotate(90deg);
+}
+
+.quote-modal__close svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* --------------------------------------------------------------------------
+   12. Scroll reveal
+   Driven by IntersectionObserver in main.js. The .reveal class is only
+   added by JS, so content stays visible if JS fails to load.
+   -------------------------------------------------------------------------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity var(--dur-reveal) var(--ease-out),
+    transform var(--dur-reveal) var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.reveal--left {
+  transform: translateX(-36px);
+}
+
+.reveal--right {
+  transform: translateX(36px);
+}
+
+.reveal--scale {
+  transform: scale(0.94);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+}
