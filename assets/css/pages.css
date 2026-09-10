@@ -284,7 +284,118 @@ a.contact-info__value:hover {
 }
 
 /* --------------------------------------------------------------------------
-   5. 404
+   5. Documento legal (Política de Privacidad)
+   -------------------------------------------------------------------------- */
+.legal {
+  max-width: 74ch;
+}
+
+.legal p {
+  color: var(--text-muted);
+  margin-bottom: var(--space-sm);
+}
+
+.legal .lead {
+  font-size: var(--text-lg);
+  color: var(--ink-800);
+  font-weight: 600;
+}
+
+.legal h2 {
+  font-size: var(--text-xl);
+  margin-top: var(--space-2xl);
+  margin-bottom: var(--space-sm);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border);
+}
+
+.legal h3 {
+  font-size: var(--text-lg);
+  margin-top: var(--space-lg);
+  margin-bottom: var(--space-2xs);
+}
+
+.legal a {
+  color: var(--brand-red);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.legal__meta {
+  display: inline-block;
+  padding: 6px var(--space-sm);
+  margin-bottom: var(--space-lg);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--slate-700);
+  background-color: var(--surface);
+  border-radius: var(--radius-sm);
+}
+
+/* Ficha de datos del responsable: etiqueta a la izquierda, valor a la derecha */
+.legal__data {
+  display: grid;
+  gap: var(--space-2xs);
+  margin: var(--space-md) 0 var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+  background-color: var(--surface);
+  border-left: 3px solid var(--brand-red);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+.legal__data li {
+  display: grid;
+  grid-template-columns: 128px 1fr;
+  gap: var(--space-sm);
+  font-size: var(--text-base);
+}
+
+.legal__data strong {
+  font-family: var(--font-heading);
+  color: var(--ink-900);
+}
+
+.legal__data span {
+  color: var(--text-muted);
+}
+
+/* Listas numeradas y con viñeta dentro del documento */
+.legal__list {
+  display: grid;
+  gap: var(--space-2xs);
+  margin: var(--space-sm) 0 var(--space-md);
+  padding-left: var(--space-md);
+  list-style: revert;
+  color: var(--text-muted);
+}
+
+.legal__list li {
+  padding-left: var(--space-2xs);
+}
+
+.legal__list::marker,
+.legal__list li::marker {
+  color: var(--brand-red);
+  font-weight: 700;
+}
+
+.legal .checklist {
+  margin-bottom: var(--space-md);
+}
+
+@media (max-width: 640px) {
+  .legal__data li {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .legal__data li + li {
+    margin-top: var(--space-2xs);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   6. 404
    -------------------------------------------------------------------------- */
 .error-page {
   display: grid;

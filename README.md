@@ -15,6 +15,7 @@ Se abre `index.html` en el navegador y funciona.
 ├── nosotros.html       Historia, misión/visión/valores
 ├── servicios.html      Seis servicios en panel maestro-detalle
 ├── contacto.html       Formulario, datos y mapa
+├── privacidad.html     Política de privacidad (Ley 29733)
 ├── 404.html
 ├── robots.txt · sitemap.xml
 │
@@ -64,9 +65,11 @@ vista previa de enlaces todavía no interpretan WebP.
 
 ## Pendiente antes de publicar
 
+- [ ] **Inscribir el banco de datos personales** en el Registro Nacional de la
+      ANPD. La Ley 29733 lo exige y la política de privacidad ya lo declara
+      (marcado con `TODO legal` en `privacidad.html`)
+- [ ] Revisión de la política de privacidad por el abogado de la empresa
 - [ ] Reemplazar las cifras del inicio por las reales (marcadas con `TODO`)
-- [ ] Completar el equipo en `nosotros.html` (marcado con `TODO`)
-- [ ] Poner la dirección exacta en el mapa de `contacto.html` (marcado con `TODO`)
 - [ ] Reemplazar `hero/capacitacion-corporativa-empresas.webp`: tiene texto
       ilegible generado por IA en las pantallas del fondo
 
