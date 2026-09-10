@@ -162,7 +162,17 @@ servidor de vista previa, que replica el comportamiento del `.htaccess`:
 python preview.py
 ```
 
-Abre `http://localhost:5501` en el navegador. Requiere Python 3, nada más.
+Abre `http://localhost:5510` en el navegador.
+
+**No uses la extensión Live Server de VS Code para probar el formulario.**
+No ejecuta PHP: devuelve el código fuente como texto y rechaza los envíos
+con `501 Unsupported method`. Además usa el puerto 5501, así que si ambos
+se levantan a la vez las peticiones caen en uno o en otro sin criterio.
+preview.py usa el 5510 justamente para no chocar con ella.
+
+Para el Libro de Reclamaciones hace falta PHP 8. preview.py lo busca en el
+PATH y en las rutas habituales de instalación; si no lo encuentra, el sitio
+se ve igual pero el formulario avisa con un mensaje claro.
 
 Para regenerar la miniatura de redes sociales tras editar su texto, el
 comando está documentado dentro de `assets/imagen/og/og-image.source.html`.

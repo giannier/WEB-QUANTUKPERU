@@ -82,10 +82,35 @@ if ((int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 65536) {
 // -------------------------------------------------------------------------
 $origen = $_SERVER['HTTP_ORIGIN'] ?? '';
 if ($origen !== '') {
+    // parse_url devuelve el host SIN puerto, mientras que HTTP_HOST lo trae
+    // incluido cuando no es el estándar. Comparar uno contra otro tal cual
+    // hace que "127.0.0.1" nunca coincida con "127.0.0.1:5510" y se rechacen
+    // envíos legítimos. En un dominio normal el fallo no se ve, porque ahí
+    // HTTP_HOST tampoco lleva puerto: solo aparece fuera del 80 y el 443.
     $hostOrigen = parse_url($origen, PHP_URL_HOST) ?: '';
+    $puertoOrigen = parse_url($origen, PHP_URL_PORT);
+    if ($puertoOrigen) {
+        $hostOrigen .= ':' . $puertoOrigen;
+    }
+
     $hostPropio = $_SERVER['HTTP_HOST'] ?? '';
-    if (strcasecmp($hostOrigen, $hostPropio) !== 0
-        && strcasecmp($hostOrigen, 'www.' . $hostPropio) !== 0) {
+
+    $aceptados = [$hostPropio, 'www.' . $hostPropio];
+    // El sitio canónico va sin www, pero alguien puede llegar por ahí antes
+    // de que actúe la redirección del .htaccess.
+    if (str_starts_with(strtolower($hostPropio), 'www.')) {
+        $aceptados[] = substr($hostPropio, 4);
+    }
+
+    $coincide = false;
+    foreach ($aceptados as $candidato) {
+        if ($candidato !== '' && strcasecmp($hostOrigen, $candidato) === 0) {
+            $coincide = true;
+            break;
+        }
+    }
+
+    if (!$coincide) {
         anotar($config, 'BLOCK', "origen cruzado '$origen' desde $ip");
         responder(403, ['ok' => false, 'mensaje' => 'Solicitud no autorizada.']);
     }

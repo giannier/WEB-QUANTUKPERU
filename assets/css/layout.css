@@ -734,7 +734,11 @@ a.topbar__value:hover {
   font-size: var(--text-sm);
 }
 
-.site-footer__bottom a:hover {
+/* :not() excluye al botón del Libro de Reclamaciones en lugar de competir
+   con él por especificidad. Esta regla es (0,2,1) y .footer-lr:hover (0,2,0),
+   así que ganaba y pintaba el texto de rojo sobre el fondo rojo del botón:
+   las letras desaparecían. */
+.site-footer__bottom a:not(.footer-lr):hover {
   color: var(--brand-red);
 }
 
