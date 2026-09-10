@@ -32,6 +32,14 @@ DirectoryIndex index.html
   RewriteCond %{THE_REQUEST} \s/+index\.html[\s?] [NC]
   RewriteRule ^ / [R=301,L]
 
+  # /inicio  ->  /
+  # Alias por comodidad: si alguien lo escribe a mano o lo ve en un material
+  # impreso, llega igual. El hogar del sitio sigue siendo la raíz, que es
+  # donde caen todos los enlaces externos y quien escribe el dominio a secas.
+  # Servir el inicio en dos direcciones dividiría el posicionamiento.
+  RewriteCond %{THE_REQUEST} \s/+inicio/?[\s?] [NC]
+  RewriteRule ^ / [R=301,L]
+
   # /servicios.html  ->  /servicios
   # Solo archivos de primer nivel ([^/]+), para no tocar nada dentro de
   # assets/. Actúa sobre THE_REQUEST, o sea únicamente sobre lo que el

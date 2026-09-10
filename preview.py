@@ -30,6 +30,18 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 class CleanURLHandler(http.server.SimpleHTTPRequestHandler):
     """Resuelve rutas sin extensión y devuelve 404.html cuando no existe."""
 
+    # Atajos que el .htaccess redirige con 301 en el hosting
+    ALIAS = {"/inicio": "/", "/inicio/": "/", "/index.html": "/"}
+
+    def do_GET(self):
+        destino = self.ALIAS.get(urlsplit(self.path).path.lower())
+        if destino:
+            self.send_response(301)
+            self.send_header("Location", destino)
+            self.end_headers()
+            return
+        super().do_GET()
+
     def translate_path(self, path):
         # Ruta relativa pedida, sin querystring ni ancla
         rel = unquote(urlsplit(path).path).lstrip("/")
