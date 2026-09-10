@@ -27,3 +27,8 @@ $RECYCLE.BIN/
 *.log
 *.tmp
 node_modules/
+
+# --- Python ----------------------------------------------------------------
+# Bytecode que genera el intérprete al importar preview.py
+__pycache__/
+*.py[cod]
