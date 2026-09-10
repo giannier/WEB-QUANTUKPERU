@@ -72,10 +72,36 @@ vista previa de enlaces todavía no interpretan WebP.
 
 ---
 
+## URLs limpias
+
+Las páginas se publican **sin la extensión**: `quantukperu.com/servicios`, no
+`/servicios.html`. Lo resuelve el archivo `.htaccess`, que además:
+
+- fuerza HTTPS y la versión sin `www`
+- redirige con 301 las URLs viejas con `.html` a las limpias
+- quita la barra final, que rompería las rutas relativas de los assets
+- comprime, define caché y agrega cabeceras de seguridad
+
+Funciona en Apache y en LiteSpeed, que son los motores que usa cPanel. **En
+Nginx no se aplica**: ahí hace falta una directiva `try_files` en la
+configuración del servidor.
+
+Si algo fallara al publicar, renombrar `.htaccess` a `.htaccess.off` desactiva
+todo y el sitio vuelve a funcionar con las URLs largas.
+
+---
+
 ## Desarrollo
 
-No requiere nada instalado. Con la extensión **Live Server** de VS Code el
-puerto ya está configurado en `.vscode/settings.json`.
+Como los enlaces del menú apuntan a rutas sin extensión, abrir `index.html`
+con doble clic muestra la página pero **no permite navegar**. Para eso está el
+servidor de vista previa, que replica el comportamiento del `.htaccess`:
+
+```bash
+python preview.py
+```
+
+Abre `http://localhost:5501` en el navegador. Requiere Python 3, nada más.
 
 Para regenerar la miniatura de redes sociales tras editar su texto, el
 comando está documentado dentro de `assets/imagen/og/og-image.source.html`.

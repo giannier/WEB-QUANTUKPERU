@@ -1,0 +1,135 @@
+# ===========================================================================
+# Quantuk Perú — configuración del servidor
+#
+# Funciona en Apache y en LiteSpeed, que son los dos motores que usa cPanel.
+# Si algo de acá rompiera el sitio, renombrar este archivo a .htaccess.off
+# lo desactiva por completo y todo vuelve a funcionar con las URLs largas.
+# ===========================================================================
+
+Options -Indexes
+DirectoryIndex index.html
+
+# ---------------------------------------------------------------------------
+# 1. URLs limpias y canónicas
+# ---------------------------------------------------------------------------
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # HTTPS obligatorio.
+  # La segunda condición cubre los hostings detrás de proxy o Cloudflare,
+  # donde %{HTTPS} llega en "off" aunque el visitante sí esté en HTTPS.
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !https
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
+  # Sin www: el canonical declarado en el HTML es quantukperu.com a secas.
+  # Tener las dos versiones vivas divide el posicionamiento entre ambas.
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^ https://%1%{REQUEST_URI} [R=301,L]
+
+  # /index.html  ->  /
+  RewriteCond %{THE_REQUEST} \s/+index\.html[\s?] [NC]
+  RewriteRule ^ / [R=301,L]
+
+  # /servicios.html  ->  /servicios
+  # Solo archivos de primer nivel ([^/]+), para no tocar nada dentro de
+  # assets/. Actúa sobre THE_REQUEST, o sea únicamente sobre lo que el
+  # navegador pidió: las reescrituras internas de más abajo no entran acá
+  # y no se produce un bucle de redirecciones.
+  RewriteCond %{THE_REQUEST} \s/+([^/]+)\.html[\s?] [NC]
+  RewriteRule ^ /%1 [R=301,L]
+
+  # /servicios/  ->  /servicios
+  # Importante: sin esta regla, una barra final haría que el navegador
+  # resolviera assets/css/... como /servicios/assets/css/... y la página
+  # se vería sin estilos.
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.+)/$ /$1 [R=301,L]
+
+  # Sirve el .html sin mostrarlo en la barra de direcciones
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{DOCUMENT_ROOT}/$1.html -f
+  RewriteRule ^(.+)$ /$1.html [L]
+</IfModule>
+
+ErrorDocument 404 /404.html
+
+# ---------------------------------------------------------------------------
+# 2. Tipos MIME
+# ---------------------------------------------------------------------------
+<IfModule mod_mime.c>
+  # Algunos servidores viejos no reconocen WebP y lo descargan en vez de
+  # mostrarlo. Todas las fotos del sitio están en ese formato.
+  AddType image/webp .webp
+  AddType image/svg+xml .svg
+  AddType application/manifest+json .webmanifest
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# 3. Compresión
+# ---------------------------------------------------------------------------
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/plain text/css text/xml
+  AddOutputFilterByType DEFLATE application/javascript application/json
+  AddOutputFilterByType DEFLATE application/xml image/svg+xml
+  # Las imágenes ya vienen comprimidas: volver a comprimirlas gasta CPU
+  # y no ahorra nada.
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# 4. Caché del navegador
+# ---------------------------------------------------------------------------
+<IfModule mod_expires.c>
+  ExpiresActive On
+
+  # El HTML nunca se cachea: es lo que hace que un cambio se vea enseguida
+  ExpiresByType text/html "access plus 0 seconds"
+
+  # CSS y JS: una semana, no un año.
+  # Los archivos no llevan versión en el nombre, así que un año dejaría a
+  # los visitantes recurrentes con estilos viejos tras cada cambio.
+  # Para forzar la actualización antes de tiempo: base.css?v=2
+  ExpiresByType text/css "access plus 1 week"
+  ExpiresByType application/javascript "access plus 1 week"
+
+  # Imágenes y fuentes: un año. Sus nombres son únicos y descriptivos,
+  # si cambia el contenido cambia el archivo.
+  ExpiresByType image/webp "access plus 1 year"
+  ExpiresByType image/png "access plus 1 year"
+  ExpiresByType image/jpeg "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 year"
+  ExpiresByType font/woff2 "access plus 1 year"
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# 5. Cabeceras de seguridad
+# ---------------------------------------------------------------------------
+<IfModule mod_headers.c>
+  # Impide que el navegador adivine el tipo de archivo e interprete como
+  # script algo que no lo es
+  Header always set X-Content-Type-Options "nosniff"
+
+  # Nadie puede incrustar el sitio en un iframe ajeno (evita clickjacking)
+  Header always set X-Frame-Options "SAMEORIGIN"
+
+  # No filtra la URL completa al salir hacia otro dominio
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # Desactiva APIs del navegador que el sitio no usa
+  Header always set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# 6. Archivos que no deben servirse
+# ---------------------------------------------------------------------------
+<FilesMatch "^\.|\.(md|source\.html)$">
+  Require all denied
+</FilesMatch>
+
+# El fuente de la miniatura de redes es una herramienta interna, no una
+# página del sitio: no debe ser accesible ni indexable.
+<Files "og-image.source.html">
+  Require all denied
+</Files>
