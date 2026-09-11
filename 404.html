@@ -10,7 +10,16 @@
 <link rel="icon" href="assets/imagen/LOGO ORIGINAL.png" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap">
+<!-- Las tipografías se cargan SIN bloquear el pintado.
+     Como <link rel="stylesheet"> normal, el navegador no dibuja nada hasta
+     recibirla: si Google responde lento o no responde, la página se queda
+     en blanco esperando. Con media="print" el navegador la descarga sin
+     considerarla necesaria para pintar, y al terminar se pasa a "all".
+     El texto aparece de inmediato con la tipografía del sistema y cambia a
+     Poppins cuando llega. -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" media="print" onload="this.media='all';this.onload=null">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"></noscript>
 <link rel="stylesheet" href="assets/css/base.css">
 <link rel="stylesheet" href="assets/css/layout.css">
 <link rel="stylesheet" href="assets/css/components.css">
