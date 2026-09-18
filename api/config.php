@@ -28,7 +28,7 @@ return [
         'direccion'    => 'Av. República de Chile 324, Int. 601, Urb. Santa Beatriz '
                         . '(Edificio Polaris), Jesús María, Lima',
         'web'          => 'quantukperu.com',
-        'telefono'     => '+51 943704298',
+        'telefono'     => '+51 943 704 298',
     ],
 
     // ---------------------------------------------------------------------
