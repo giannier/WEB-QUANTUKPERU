@@ -242,7 +242,7 @@
         showStatus(
           form,
           "error",
-          "El formulario no tiene configurado un destino de envío. Escríbenos a info@quantukperu.com"
+          "El formulario no tiene configurado un destino de envío. Escríbenos a comercial@quantukperu.com"
         );
         return;
       }
@@ -270,7 +270,7 @@
           showStatus(
             form,
             "error",
-            "No pudimos enviar tu mensaje. Inténtalo nuevamente o escríbenos a info@quantukperu.com"
+            "No pudimos enviar tu mensaje. Inténtalo nuevamente o escríbenos a comercial@quantukperu.com"
           );
         })
         .finally(function () {
