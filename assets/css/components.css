@@ -1345,3 +1345,62 @@ select.field__control {
     transform: none;
   }
 }
+
+/* --------------------------------------------------------------------------
+   Sello ISO 37001 en el hero
+   El sello es azul sobre transparente: sobre la foto oscura pierde
+   contraste, así que va sobre una placa blanca. Es una pieza fija del hero
+   (no cambia con las diapositivas), centrada sobre el eje del carrusel.
+   -------------------------------------------------------------------------- */
+.hero__cert {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(1.5rem, 4vh, 3rem);
+  z-index: var(--z-raised);
+  padding: 8px 12px;
+  background-color: var(--white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md), 0 0 0 4px rgba(255, 255, 255, 0.18);
+  transform: translateX(-50%);
+  animation: hero-cert-in var(--dur-reveal) var(--ease-out) 600ms both;
+}
+
+.hero__cert img {
+  display: block;
+  width: 168px;
+  height: auto;
+}
+
+@keyframes hero-cert-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 14px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* Con la topbar fuera y controles más justos, el sello sube sobre la fila
+   de controles y el contenido reserva ese espacio. */
+@media (max-width: 900px) {
+  .hero__cert {
+    bottom: calc(clamp(1.5rem, 4vh, 3rem) + 52px + var(--space-sm));
+    padding: 6px 10px;
+  }
+
+  .hero__cert img {
+    width: 132px;
+  }
+
+  .hero__slide .hero__content {
+    padding-bottom: 11rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__cert {
+    animation: none;
+  }
+}

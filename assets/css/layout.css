@@ -635,6 +635,33 @@ a.topbar__value:hover {
   max-width: 34ch;
 }
 
+/* Sello ISO 37001: placa blanca para conservar el azul y los logos de
+   acreditación legibles sobre el fondo oscuro del footer. */
+.footer-cert {
+  margin: 0 0 var(--space-md);
+}
+
+.footer-cert__plate {
+  display: inline-block;
+  padding: 8px 12px;
+  background-color: var(--white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm), 0 0 0 3px rgba(255, 255, 255, 0.12);
+}
+
+.footer-cert img {
+  display: block;
+  width: 168px;
+  height: auto;
+  margin: 0;
+}
+
+.footer-cert figcaption {
+  margin-top: var(--space-xs);
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.78);
+}
+
 .footer-title {
   font-family: var(--font-heading);
   font-size: var(--text-base);
