@@ -635,6 +635,61 @@ a.topbar__value:hover {
   max-width: 34ch;
 }
 
+/* Tarjeta del Libro de Reclamaciones (pie de página) */
+.footer-lr-card {
+  margin: 0 0 var(--space-md);
+}
+
+.footer-lr-card__link {
+  display: block;
+  width: 130px;
+  overflow: hidden;
+  border-radius: 1rem;
+  background-color: var(--white);
+  box-shadow: var(--shadow-sm), 0 0 0 1px rgba(255, 255, 255, 0.18);
+  transition: transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.footer-lr-card__link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+
+.footer-lr-card__link picture,
+.site-footer__brand .footer-lr-card__link img {
+  display: block;
+}
+
+.site-footer__brand .footer-lr-card__link img {
+  width: 100%;
+  height: auto;
+  margin: 0;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.footer-lr-card__mail {
+  display: inline-block;
+  margin-top: var(--space-2xs);
+  font-size: var(--text-sm);
+  color: rgba(255, 255, 255, 0.55);
+  overflow-wrap: anywhere;
+}
+
+.footer-lr-card__mail:hover {
+  color: var(--white);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .footer-lr-card__link {
+    transition: none;
+  }
+  .footer-lr-card__link:hover {
+    transform: none;
+  }
+}
+
 /* Sello ISO 37001: placa blanca para conservar el azul y los logos de
    acreditación legibles sobre el fondo oscuro del footer. */
 .footer-cert {

@@ -13,10 +13,13 @@ $config = require __DIR__ . '/config.php';
 date_default_timezone_set($config['timezone']);
 
 require_once __DIR__ . '/src/Seguridad.php';
+require_once __DIR__ . '/src/Captcha.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('Referrer-Policy: same-origin');
 
 $seguridad = new Seguridad($config);
 $emision = $seguridad->emitirToken();
@@ -25,4 +28,6 @@ echo json_encode([
     'token' => $emision['token'],
     // El navegador usa esto para no dejar enviar antes de tiempo
     'espera_minima' => $config['limites']['segundos_minimos'],
+    // Clave pública de hCaptcha (la secreta nunca sale del servidor)
+    'captcha_sitekey' => (new Captcha($config))->siteKey(),
 ], JSON_UNESCAPED_UNICODE);

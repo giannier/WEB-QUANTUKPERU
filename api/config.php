@@ -15,6 +15,23 @@
 
 declare(strict_types=1);
 
+// Secretos de api/config.secret.php (excluido de Git). Acepta el formato
+// antiguo (solo un string = contraseña SMTP) o un array con las claves
+// smtp_password, hcaptcha_site_key y hcaptcha_secret.
+$secretos = ['smtp_password' => '', 'hcaptcha_site_key' => '', 'hcaptcha_secret' => ''];
+if (is_file(__DIR__ . '/config.secret.php')) {
+    $valor = require __DIR__ . '/config.secret.php';
+    if (is_string($valor)) {
+        $secretos['smtp_password'] = $valor;
+    } elseif (is_array($valor)) {
+        foreach ($secretos as $k => $_) {
+            if (isset($valor[$k]) && is_string($valor[$k])) {
+                $secretos[$k] = $valor[$k];
+            }
+        }
+    }
+}
+
 return [
 
     // ---------------------------------------------------------------------
@@ -43,7 +60,8 @@ return [
         /*
          * La contraseña NO va acá.
          *
-         * Va en api/config.secret.php, que está excluido del repositorio.
+         * Va en api/config.secret.php (clave smtp_password), que está
+         * excluido del repositorio.
          * Si se escribiera en este archivo, tarde o temprano alguien lo
          * commitea y la contraseña queda en el historial de Git para
          * siempre: borrarla del archivo después no la borra del historial.
@@ -51,14 +69,7 @@ return [
          * Al desplegar, copiar config.secret.example.php a
          * config.secret.php y poner la contraseña ahí dentro.
          */
-        'password'   => (static function (): string {
-            $secreto = __DIR__ . '/config.secret.php';
-            if (!is_file($secreto)) {
-                return '';
-            }
-            $valor = require $secreto;
-            return is_string($valor) ? $valor : '';
-        })(),
+        'password'   => $secretos['smtp_password'],
 
         'remitente_nombre' => 'Quantuk Perú — Libro de Reclamaciones',
 
@@ -75,14 +86,26 @@ return [
     ],
 
     // ---------------------------------------------------------------------
+    // hCaptcha. Las claves reales van en api/config.secret.php.
+    // Sin claves el envío se rechaza (fail-closed).
+    // ---------------------------------------------------------------------
+    'captcha' => [
+        'site_key'        => $secretos['hcaptcha_site_key'],
+        'secret'          => $secretos['hcaptcha_secret'],
+        'domain'          => 'quantukperu.com', // hostname esperado (y www.)
+        'allow_localhost' => false,             // true solo en desarrollo local
+    ],
+
+    // ---------------------------------------------------------------------
     // Límites de envío por IP.
     // Un Libro de Reclamaciones legítimo recibe pocos registros por persona;
     // estos números frenan el abuso sin estorbar a un reclamante real.
     // ---------------------------------------------------------------------
     'limites' => [
-        'por_hora'          => 3,
-        'por_dia'           => 8,
-        'global_por_hora'   => 120,   // freno de emergencia ante un flood
+        'intervalo_segundos' => 1800, // 1 reclamo cada 30 min por IP
+        'por_dia'           => 5,     // y 5 cada 24 h por IP
+        'global_por_hora'   => 20,    // freno de emergencia ante un flood distribuido
+        'global_por_dia'    => 80,
         'segundos_minimos'  => 6,     // llenar el formulario más rápido = bot
         'vigencia_token'    => 7200,  // 2 h de validez del token del formulario
     ],

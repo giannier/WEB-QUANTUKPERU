@@ -19,6 +19,24 @@
   var enviando = false;
   var esperaMinima = 6;
   var cargadoEn = Date.now();
+  var captchaId = null;
+  var captchaKey = "";
+
+  /* ------------------------------------------------------------------------
+     hCaptcha: la clave pública llega desde api/token.php; el widget se
+     dibuja cuando están listos tanto la clave como el script de hCaptcha.
+     ------------------------------------------------------------------------ */
+  function dibujarCaptcha() {
+    var caja = document.getElementById("lr-captcha");
+    if (!caja || captchaId !== null || !captchaKey || !window.hcaptcha) return;
+    captchaId = window.hcaptcha.render(caja, { sitekey: captchaKey, theme: "light" });
+  }
+
+  window.lrCaptchaListo = dibujarCaptcha;
+
+  function reiniciarCaptcha() {
+    if (captchaId !== null && window.hcaptcha) window.hcaptcha.reset(captchaId);
+  }
 
   /* ------------------------------------------------------------------------
      Token: se pide al cargar la página y liga el envío a esta sesión
@@ -33,6 +51,8 @@
         document.getElementById("lr-token").value = d.token || "";
         if (d.espera_minima) esperaMinima = d.espera_minima;
         cargadoEn = Date.now();
+        captchaKey = d.captcha_sitekey || "";
+        dibujarCaptcha();
       })
       .catch(function () {
         // Sin token el envío será rechazado; se avisa acá y no al enviar,
@@ -251,6 +271,16 @@
         return;
       }
 
+      var tokenCaptcha = captchaId !== null && window.hcaptcha
+        ? window.hcaptcha.getResponse(captchaId) : "";
+      if (!tokenCaptcha) {
+        mostrarEstado("error", "Marca la casilla de verificación para demostrar que eres una persona.");
+        return;
+      }
+
+      var datosForm = new FormData(form);
+      datosForm.set("h-captcha-response", tokenCaptcha);
+
       enviando = true;
       boton.setAttribute("aria-busy", "true");
       var etiqueta = boton.textContent;
@@ -260,7 +290,7 @@
         method: "POST",
         credentials: "same-origin",
         cache: "no-store",
-        body: new FormData(form)
+        body: datosForm
       })
         .then(function (r) {
           return r.json().then(function (d) { return { estado: r.status, datos: d }; });
@@ -283,10 +313,14 @@
 
           mostrarEstado("error", d.mensaje || "No pudimos registrar tu reclamo. Inténtalo de nuevo.");
 
+          // El token de hCaptcha es de un solo uso: se reinicia el widget
+          reiniciarCaptcha();
+
           // Si el token venció, se pide otro para que pueda reintentar
           if (r.estado === 419 || r.estado === 403) pedirToken();
         })
         .catch(function () {
+          reiniciarCaptcha();
           mostrarEstado(
             "error",
             "No pudimos conectar con el servidor. Revisa tu conexión o escríbenos a reclamaciones@quantukperu.com"

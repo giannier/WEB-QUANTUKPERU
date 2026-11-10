@@ -283,3 +283,9 @@
 .lr-exito .btn {
   margin-top: var(--space-lg);
 }
+
+/* hCaptcha: reserva el alto del widget para que el botón no salte */
+.lr-captcha {
+  min-height: 78px;
+  margin: 0 0 var(--space-4, 1rem);
+}

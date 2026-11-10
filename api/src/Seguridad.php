@@ -23,131 +23,178 @@ final class Seguridad
         }
     }
 
+    /** Rangos publicados por Cloudflare (https://www.cloudflare.com/ips/). */
+    private const CLOUDFLARE = [
+        '173.245.48.0/20', '103.21.244.0/22', '103.22.200.0/22', '103.31.4.0/22',
+        '141.101.64.0/18', '108.162.192.0/18', '190.93.240.0/20', '188.114.96.0/20',
+        '197.234.240.0/22', '198.41.128.0/17', '162.158.0.0/15', '104.16.0.0/13',
+        '104.24.0.0/14', '172.64.0.0/13', '131.0.72.0/22',
+        '2400:cb00::/32', '2606:4700::/32', '2803:f800::/32', '2405:b500::/32',
+        '2405:8100::/32', '2a06:98c0::/29', '2c0f:f248::/32',
+    ];
+
     /**
      * IP real del visitante.
      *
-     * Se leen las cabeceras de proxy solo si el hosting está detrás de uno
-     * conocido. Confiar ciegamente en X-Forwarded-For permitiría a cualquiera
-     * falsear su IP y saltarse el límite enviando la cabecera a mano.
+     * Se parte de REMOTE_ADDR, que no se puede falsear. CF-Connecting-IP solo
+     * se acepta cuando la conexión llega desde un rango de Cloudflare; si no,
+     * cualquiera podría falsear su IP enviando la cabecera a mano.
+     * X-Forwarded-For nunca se usa.
      */
     public function ip(): string
     {
-        $candidatas = [];
-
-        // Cloudflare firma esta cabecera y no es falsificable de extremo a extremo
-        if (!empty($_SERVER['HTTP_CF_CONNECTING_IP'])) {
-            $candidatas[] = $_SERVER['HTTP_CF_CONNECTING_IP'];
+        $remota = trim((string) ($_SERVER['REMOTE_ADDR'] ?? ''));
+        if (!filter_var($remota, FILTER_VALIDATE_IP)) {
+            return '0.0.0.0';
         }
 
-        $candidatas[] = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
-
-        foreach ($candidatas as $ip) {
-            $ip = trim((string) $ip);
-            if (filter_var($ip, FILTER_VALIDATE_IP)) {
-                return $ip;
-            }
+        $cf = trim((string) ($_SERVER['HTTP_CF_CONNECTING_IP'] ?? ''));
+        if ($cf !== '' && filter_var($cf, FILTER_VALIDATE_IP) && $this->enRangoCloudflare($remota)) {
+            return $cf;
         }
 
-        return '0.0.0.0';
+        return $remota;
     }
 
-    /** Clave de archivo derivada de la IP: no se guarda la IP en claro. */
-    private function clave(string $ip): string
+    private function enRangoCloudflare(string $ip): bool
     {
-        return hash('sha256', $ip . '|quantuk-libro-reclamaciones');
+        $bin = @inet_pton($ip);
+        if ($bin === false) {
+            return false;
+        }
+        foreach (self::CLOUDFLARE as $cidr) {
+            [$red, $bits] = explode('/', $cidr);
+            $binRed = inet_pton($red);
+            if (strlen($binRed) !== strlen($bin)) {
+                continue;
+            }
+            $bits = (int) $bits;
+            $bytes = intdiv($bits, 8);
+            if (strncmp($bin, $binRed, $bytes) !== 0) {
+                continue;
+            }
+            $resto = $bits % 8;
+            if ($resto === 0) {
+                return true;
+            }
+            $mascara = (0xFF << (8 - $resto)) & 0xFF;
+            if ((ord($bin[$bytes]) & $mascara) === (ord($binRed[$bytes]) & $mascara)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
-     * ¿Esta IP puede registrar otro reclamo?
-     * Ventana deslizante: se conservan las marcas de tiempo del último día
-     * y se cuentan las que caen dentro de cada ventana.
+     * Sal secreta propia del servidor (se genera sola la primera vez y vive en
+     * storage/, que está cerrado por HTTP). Con una sal fija y pública en el
+     * código, el hash de una IP se podría revertir por fuerza bruta.
      */
-    public function permitido(string $ip, ?string &$motivo = null): bool
+    private function sal(): string
+    {
+        static $sal = null;
+        if ($sal !== null) {
+            return $sal;
+        }
+        $archivo = $this->dirRate . '/.sal';
+        $valor = is_file($archivo) ? trim((string) @file_get_contents($archivo)) : '';
+        if (strlen($valor) < 32) {
+            $nuevo = bin2hex(random_bytes(32));
+            // 'x' falla si otro proceso la creó antes: en ese caso se relee
+            $fp = @fopen($archivo, 'x');
+            if ($fp !== false) {
+                fwrite($fp, $nuevo);
+                fclose($fp);
+                @chmod($archivo, 0600);
+            }
+            $valor = trim((string) @file_get_contents($archivo));
+            if (strlen($valor) < 32) {
+                $valor = $nuevo;
+            }
+        }
+        return $sal = $valor;
+    }
+
+    /** Clave derivada de la IP: no se guarda la IP en claro. */
+    private function clave(string $ip): string
+    {
+        return hash_hmac('sha256', $ip, $this->sal());
+    }
+
+    /** Huella pública de la IP para el archivo de hojas (no reversible sin la sal). */
+    public function huellaIp(string $ip): string
+    {
+        return $this->clave($ip);
+    }
+
+    /**
+     * Comprueba los límites y, si se cumplen, reserva el cupo en la misma
+     * operación bajo flock: dos envíos simultáneos no pueden colarse entre la
+     * lectura y la escritura. Límites por IP (intervalo mínimo y tope diario),
+     * tope global por hora y por día, y contenido repetido en 24 h.
+     * Si el almacén no se puede abrir, se rechaza (fail-closed).
+     */
+    public function reservar(string $ip, string $contenido, ?string &$motivo = null): bool
     {
         $ahora = time();
-
-        // --- Freno global -------------------------------------------------
-        $global = $this->leer($this->dirRate . '/_global.json');
-        $global = array_values(array_filter($global, fn($t) => $t > $ahora - 3600));
-        if (count($global) >= $this->limites['global_por_hora']) {
-            $motivo = 'global';
-            return false;
-        }
-
-        // --- Por IP -------------------------------------------------------
-        $archivo = $this->dirRate . '/' . $this->clave($ip) . '.json';
-        $marcas  = $this->leer($archivo);
-        $marcas  = array_values(array_filter($marcas, fn($t) => $t > $ahora - 86400));
-
-        $ultimaHora = count(array_filter($marcas, fn($t) => $t > $ahora - 3600));
-
-        if ($ultimaHora >= $this->limites['por_hora']) {
-            $motivo = 'hora';
-            return false;
-        }
-
-        if (count($marcas) >= $this->limites['por_dia']) {
-            $motivo = 'dia';
-            return false;
-        }
-
-        return true;
-    }
-
-    /** Deja constancia de un envío aceptado. */
-    public function registrar(string $ip): void
-    {
-        $ahora = time();
-
-        $archivo = $this->dirRate . '/' . $this->clave($ip) . '.json';
-        $marcas  = $this->leer($archivo);
-        $marcas  = array_values(array_filter($marcas, fn($t) => $t > $ahora - 86400));
-        $marcas[] = $ahora;
-        $this->escribir($archivo, $marcas);
-
-        $g = $this->dirRate . '/_global.json';
-        $global = array_values(array_filter($this->leer($g), fn($t) => $t > $ahora - 3600));
-        $global[] = $ahora;
-        $this->escribir($g, $global);
-
-        $this->limpiar();
-    }
-
-    private function leer(string $archivo): array
-    {
-        if (!is_file($archivo)) {
-            return [];
-        }
-        $raw = @file_get_contents($archivo);
-        if ($raw === false) {
-            return [];
-        }
-        $datos = json_decode($raw, true);
-        return is_array($datos) ? array_filter($datos, 'is_int') : [];
-    }
-
-    private function escribir(string $archivo, array $marcas): void
-    {
-        // LOCK_EX evita que dos envíos simultáneos se pisen el contador
-        @file_put_contents($archivo, json_encode(array_values($marcas)), LOCK_EX);
-    }
-
-    /** Borra archivos de IPs que ya no tienen marcas vigentes. */
-    private function limpiar(): void
-    {
-        // Solo una de cada veinte veces: recorrer el directorio en cada
-        // petición sería un gasto inútil.
-        if (random_int(1, 20) !== 1) {
-            return;
-        }
-
-        foreach (glob($this->dirRate . '/*.json') ?: [] as $archivo) {
-            if (basename($archivo) === '_global.json') {
-                continue;
+        $fp = @fopen($this->dirRate . '/estado.json', 'c+');
+        if ($fp === false || !flock($fp, LOCK_EX)) {
+            if ($fp !== false) {
+                fclose($fp);
             }
-            if (filemtime($archivo) < time() - 86400) {
-                @unlink($archivo);
+            $motivo = 'almacen';
+            return false;
+        }
+
+        try {
+            $e = json_decode((string) stream_get_contents($fp), true);
+            $e = is_array($e) ? $e : [];
+            $vigente = static fn($t) => is_int($t) && $t > $ahora - 86400;
+
+            $ips = [];
+            foreach ((array) ($e['ips'] ?? []) as $k => $marcas) {
+                $m = array_values(array_filter((array) $marcas, $vigente));
+                if ($m !== []) {
+                    $ips[$k] = $m;
+                }
             }
+            $global = array_values(array_filter((array) ($e['global'] ?? []), $vigente));
+            $dups   = array_filter((array) ($e['dups'] ?? []), $vigente);
+
+            $k      = $this->clave($ip);
+            $marcas = $ips[$k] ?? [];
+            $huella = hash_hmac('sha256', $contenido, $this->sal());
+
+            $ultimaHora = count(array_filter($global, fn($t) => $t > $ahora - 3600));
+
+            if ($ultimaHora >= $this->limites['global_por_hora']) {
+                $motivo = 'global_hora';
+            } elseif (count($global) >= $this->limites['global_por_dia']) {
+                $motivo = 'global_dia';
+            } elseif ($marcas !== [] && max($marcas) > $ahora - $this->limites['intervalo_segundos']) {
+                $motivo = 'intervalo';
+            } elseif (count($marcas) >= $this->limites['por_dia']) {
+                $motivo = 'dia';
+            } elseif (isset($dups[$huella])) {
+                $motivo = 'duplicado';
+            } else {
+                $marcas[]       = $ahora;
+                $ips[$k]        = $marcas;
+                $global[]       = $ahora;
+                $dups[$huella]  = $ahora;
+                $motivo = null;
+            }
+
+            if ($motivo === null) {
+                ftruncate($fp, 0);
+                rewind($fp);
+                fwrite($fp, json_encode(['ips' => $ips, 'global' => $global, 'dups' => $dups]));
+                fflush($fp);
+            }
+            return $motivo === null;
+        } finally {
+            flock($fp, LOCK_UN);
+            fclose($fp);
         }
     }
 

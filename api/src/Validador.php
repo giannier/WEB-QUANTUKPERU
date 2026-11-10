@@ -102,13 +102,34 @@ final class Validador
 
     private function texto(array $p, string $campo, string $rotulo, bool $obligatorio, int $min = 2): void
     {
-        $v = $this->normalizar((string) ($p[$campo] ?? ''));
+        $crudo = (string) ($p[$campo] ?? '');
+        if (!mb_check_encoding($crudo, 'UTF-8')) {
+            $this->errores[$campo] = $rotulo . ' contiene caracteres no válidos.';
+            $this->limpio[$campo] = '';
+            return;
+        }
+
+        $v = $this->normalizar($crudo);
+
+        // Solo el detalle y el pedido admiten saltos de línea; el resto es de
+        // una línea, y así tampoco llega un CR/LF a ninguna cabecera de correo.
+        if (!in_array($campo, ['detalle', 'pedido', 'bien_desc'], true)) {
+            $v = trim(preg_replace('/\s+/u', ' ', $v) ?? '');
+        }
 
         if ($v === '') {
             if ($obligatorio) {
                 $this->errores[$campo] = $rotulo . ' es obligatorio.';
             }
             $this->limpio[$campo] = '';
+            return;
+        }
+
+        // Señales típicas de spam: enlaces en cantidad, anclas HTML o BBCode
+        if (preg_match_all('~(?:https?://|www\.)~i', $v) > 2
+            || stripos($v, '<a ') !== false
+            || stripos($v, '[url=') !== false) {
+            $this->errores[$campo] = $rotulo . ' no puede incluir enlaces.';
             return;
         }
 

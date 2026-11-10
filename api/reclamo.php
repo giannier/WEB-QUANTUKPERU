@@ -26,6 +26,7 @@ date_default_timezone_set($config['timezone']);
 ini_set('error_log', $config['storage'] . '/log/php-error.log');
 
 require_once __DIR__ . '/src/Seguridad.php';
+require_once __DIR__ . '/src/Captcha.php';
 require_once __DIR__ . '/src/Validador.php';
 require_once __DIR__ . '/src/Correlativo.php';
 require_once __DIR__ . '/src/HojaPdf.php';
@@ -35,6 +36,7 @@ header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
 header('Cache-Control: no-store');
 header('Referrer-Policy: same-origin');
+header('X-Frame-Options: DENY');
 
 /** Respuesta JSON y fin. */
 function responder(int $codigo, array $datos): never
@@ -80,8 +82,16 @@ if ((int) ($_SERVER['CONTENT_LENGTH'] ?? 0) > 65536) {
 //    El formulario solo se envía desde el propio sitio. Un POST llegado de
 //    otro dominio no tiene por qué ser atendido.
 // -------------------------------------------------------------------------
+// Se compara contra Origin y, si falta, contra Referer. Un POST sin ninguno
+// de los dos no viene de un navegador que haya cargado el formulario.
 $origen = $_SERVER['HTTP_ORIGIN'] ?? '';
-if ($origen !== '') {
+if ($origen === '') {
+    $origen = $_SERVER['HTTP_REFERER'] ?? '';
+}
+if ($origen === '') {
+    anotar($config, 'BLOCK', "sin origen ni referer desde $ip");
+    responder(403, ['ok' => false, 'mensaje' => 'Solicitud no autorizada.']);
+} else {
     // parse_url devuelve el host SIN puerto, mientras que HTTP_HOST lo trae
     // incluido cuando no es el estándar. Comparar uno contra otro tal cual
     // hace que "127.0.0.1" nunca coincida con "127.0.0.1:5510" y se rechacen
@@ -140,18 +150,6 @@ if (!$seguridad->tokenValido((string) ($_POST['token'] ?? ''), $motivo)) {
 }
 
 // -------------------------------------------------------------------------
-// 5. Límite por IP
-// -------------------------------------------------------------------------
-if (!$seguridad->permitido($ip, $motivo)) {
-    anotar($config, 'LIMIT', "limite '$motivo' alcanzado por $ip");
-    responder(429, [
-        'ok' => false,
-        'mensaje' => 'Has registrado varios reclamos en poco tiempo. '
-                   . 'Inténtalo más tarde o escríbenos a ' . $config['smtp']['copia_interna'] . '.',
-    ]);
-}
-
-// -------------------------------------------------------------------------
 // 6. Validación de los campos
 // -------------------------------------------------------------------------
 $validador = new Validador();
@@ -165,6 +163,33 @@ if (!$validador->validar($_POST)) {
 }
 
 $datos = $validador->datos();
+
+// -------------------------------------------------------------------------
+// 6a. hCaptcha (fail-closed)
+//     Va después de las comprobaciones baratas y antes de reservar cupo o
+//     enviar correo. El token de hCaptcha es de un solo uso: si algo falla
+//     más abajo, el navegador reinicia el widget.
+// -------------------------------------------------------------------------
+$captcha = new Captcha($config);
+if (!$captcha->verify((string) ($_POST['h-captcha-response'] ?? ''), $ip, $motivo)) {
+    anotar($config, 'BLOCK', "captcha fallido ($motivo) desde $ip");
+    responder(400, ['ok' => false, 'mensaje' => 'No pudimos verificar que eres una persona. Marca la casilla de verificación e inténtalo de nuevo.']);
+}
+
+// -------------------------------------------------------------------------
+// 6b. Límites por IP y globales, contenido repetido
+//     Va después de validar para que un error de tipeo no gaste el cupo, y
+//     reserva el cupo de forma atómica (flock) antes de las operaciones caras.
+// -------------------------------------------------------------------------
+$huellaContenido = mb_strtolower($datos['correo'] . '|' . $datos['nombre'] . '|' . $datos['detalle'] . '|' . $datos['pedido']);
+if (!$seguridad->reservar($ip, $huellaContenido, $motivo)) {
+    anotar($config, 'LIMIT', "limite '$motivo' alcanzado por $ip");
+    responder(429, [
+        'ok' => false,
+        'mensaje' => 'Has registrado varios reclamos en poco tiempo. '
+                   . 'Inténtalo más tarde o escríbenos a ' . $config['smtp']['copia_interna'] . '.',
+    ]);
+}
 
 // -------------------------------------------------------------------------
 // 7. Registro de la hoja
@@ -219,11 +244,10 @@ if (!is_dir($dirHojas)) {
 @file_put_contents($dirHojas . '/' . $correlativo . '.pdf', $pdf, LOCK_EX);
 @file_put_contents(
     $dirHojas . '/' . $correlativo . '.json',
-    json_encode($hoja + ['ip_hash' => hash('sha256', $ip)], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+    json_encode($hoja + ['ip_hash' => $seguridad->huellaIp($ip)], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
     LOCK_EX
 );
 
-$seguridad->registrar($ip);
 $seguridad->consumirToken();
 
 // -------------------------------------------------------------------------
